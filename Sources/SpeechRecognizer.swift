@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import whisper
 
 class SpeechRecognizer {
@@ -42,9 +43,20 @@ class SpeechRecognizer {
     }
     
     private func getModelPath() -> String {
-        let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, 
-                                               in: .userDomainMask).first!
+        let modelsDir: URL
+        
+        #if os(Linux)
+        // On Linux, use ~/.local/share/SuperWhisperLite/Models
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser
+        modelsDir = homeDir
+            .appendingPathComponent(".local/share")
             .appendingPathComponent("SuperWhisperLite/Models")
+        #else
+        // On macOS, use the application support directory
+        modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, 
+                                           in: .userDomainMask).first!
+            .appendingPathComponent("SuperWhisperLite/Models")
+        #endif
         
         try? FileManager.default.createDirectory(at: modelsDir, 
                                                withIntermediateDirectories: true)
@@ -53,24 +65,61 @@ class SpeechRecognizer {
     }
     
     private func downloadBaseModel(to path: String, completion: @escaping (Bool) -> Void) {
-        // Download the base Whisper model
+        // Download the base Whisper model with integrity verification
         let urlString = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"
+        // Known SHA-256 hash for ggml-base.bin model (should be updated when model changes)
+        let expectedHash = "60ed5bc3dd14eea856493d334349b405782e8c6c5bb8f41058bfbaafa54a4b6b"
+        
         guard let url = URL(string: urlString) else {
+            print("Invalid model download URL")
             completion(false)
             return
         }
         
-        URLSession.shared.downloadTask(with: url) { tempURL, _, error in
+        // Create secure URLSession configuration
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 300
+        config.httpMaximumConnectionsPerHost = 1
+        
+        let session = URLSession(configuration: config)
+        
+        session.downloadTask(with: url) { tempURL, response, error in
+            defer { session.invalidateAndCancel() }
+            
             guard let tempURL = tempURL, error == nil else {
+                print("Model download failed: \(error?.localizedDescription ?? "Unknown error")")
                 completion(false)
                 return
             }
             
+            // Verify HTTP response
+            if let httpResponse = response as? HTTPURLResponse {
+                guard httpResponse.statusCode == 200 else {
+                    print("Model download failed with HTTP status: \(httpResponse.statusCode)")
+                    completion(false)
+                    return
+                }
+            }
+            
             do {
+                // Verify file integrity with SHA-256
+                let downloadedData = try Data(contentsOf: tempURL)
+                let computedHash = SHA256.hash(data: downloadedData)
+                let computedHashString = computedHash.compactMap { String(format: "%02x", $0) }.joined()
+                
+                guard computedHashString.lowercased() == expectedHash.lowercased() else {
+                    print("Model integrity check failed. Expected: \(expectedHash), Got: \(computedHashString)")
+                    completion(false)
+                    return
+                }
+                
+                // Move verified file to final location
                 try FileManager.default.moveItem(at: tempURL, to: URL(fileURLWithPath: path))
+                print("Model downloaded and verified successfully")
                 completion(true)
             } catch {
-                print("Failed to move downloaded model: \(error)")
+                print("Failed to verify or move downloaded model: \(error)")
                 completion(false)
             }
         }.resume()

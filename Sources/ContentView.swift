@@ -11,6 +11,10 @@ struct ContentView: View {
             } else {
                 HeaderView()
                 
+                if !appState.hasAccessibilityPermission {
+                    AccessibilityPermissionView()
+                }
+                
                 RecordingStatusView()
                 
                 TranscriptionView()
@@ -19,7 +23,7 @@ struct ContentView: View {
             }
         }
         .padding()
-        .frame(width: 400, height: 300)
+        .frame(width: 400, height: appState.hasAccessibilityPermission ? 300 : 380)
         .background(Color(.windowBackgroundColor))
     }
 }
@@ -70,6 +74,35 @@ struct TranscriptionView: View {
         .frame(height: 100)
         .padding()
         .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+    }
+}
+
+struct AccessibilityPermissionView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle")
+                    .foregroundColor(.orange)
+                Text("Accessibility Permission Required")
+                    .font(.headline)
+                    .foregroundColor(.orange)
+            }
+            
+            Text("Text insertion requires accessibility permission. Transcriptions will still be copied to clipboard.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            Button("Grant Permission") {
+                appState.requestAccessibilityPermissions()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
         .cornerRadius(8)
     }
 }

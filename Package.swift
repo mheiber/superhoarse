@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "SuperWhisperLite",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v13),
+        .linux
     ],
     products: [
         .executable(
@@ -13,7 +14,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/ggerganov/whisper.spm.git", from: "1.5.4")
+        .package(url: "https://github.com/ggerganov/whisper.spm.git", exact: "1.5.4")
     ],
     targets: [
         .executableTarget(
@@ -22,6 +23,11 @@ let package = Package(
                 .product(name: "whisper", package: "whisper.spm")
             ],
             path: "Sources"
+        ),
+        .testTarget(
+            name: "SuperWhisperLiteTests",
+            dependencies: ["SuperWhisperLite"],
+            path: "Tests"
         ),
     ]
 )
