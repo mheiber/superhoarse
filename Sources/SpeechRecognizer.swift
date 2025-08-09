@@ -224,48 +224,55 @@ class SpeechRecognizer {
     private func filterTranscriptionArtifacts(_ text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Common Whisper artifacts to filter out
-        let artifacts = [
-            "[BLANK_AUDIO]",
-            "[BLANK AUDIO]", 
-            "[Music]",
-            "[Applause]",
-            "[Laughter]",
-            "[Background music]",
-            "[Background noise]",
-            "[Silence]",
-            "[No speech]",
-            "[Inaudible]",
-            "(blank)",
-            "(silence)",
-            "(music)",
-            "(noise)",
-            "♪",
-            "♫"
-        ]
+        // Remove anything between square brackets [...] - covers [BLANK_AUDIO], [Silence], [Split], etc.
+        let bracketsPattern = "\\[[^\\]]*\\]"
+        var cleaned = trimmed.replacingOccurrences(of: bracketsPattern, 
+                                                   with: "", 
+                                                   options: .regularExpression)
         
-        // Check if the entire segment is an artifact
-        for artifact in artifacts {
-            if trimmed.caseInsensitiveCompare(artifact) == .orderedSame ||
-               trimmed.lowercased().contains(artifact.lowercased()) && trimmed.count < 50 {
-                return ""
-            }
-        }
+        // Remove single word parentheticals like (music), (silence), (noise), (laughter)
+        let singleWordParenPattern = "\\([a-zA-Z]+\\)"
+        cleaned = cleaned.replacingOccurrences(of: singleWordParenPattern,
+                                               with: "",
+                                               options: .regularExpression)
+        
+        // Remove non-linguistic Unicode characters (symbols, emojis, music notes, etc.)
+        cleaned = String(cleaned.unicodeScalars.filter { scalar in
+            let categories: [Unicode.GeneralCategory] = [
+                .uppercaseLetter, .lowercaseLetter, .titlecaseLetter,
+                .modifierLetter, .otherLetter,
+                .nonspacingMark, .enclosingMark,
+                .letterNumber, .otherNumber,
+                .connectorPunctuation, .dashPunctuation, .openPunctuation,
+                .closePunctuation, .otherPunctuation,
+                .mathSymbol, .currencySymbol, .modifierSymbol,
+                .lineSeparator, .paragraphSeparator, .spaceSeparator
+            ]
+            
+            // Keep basic linguistic characters and common punctuation
+            return categories.contains(scalar.properties.generalCategory) ||
+                   scalar.isASCII ||  // Keep all ASCII
+                   scalar.value == 0x2019 ||  // Right single quotation mark '
+                   scalar.value == 0x201C ||  // Left double quotation mark "
+                   scalar.value == 0x201D     // Right double quotation mark "
+        })
+        
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Filter out very short unclear segments (likely artifacts)
-        if trimmed.count < 3 && !trimmed.allSatisfy({ $0.isLetter || $0.isNumber }) {
+        if cleaned.count < 3 && !cleaned.allSatisfy({ $0.isLetter || $0.isNumber }) {
             return ""
         }
         
         // Filter repetitive characters (common artifact pattern)
-        if trimmed.count > 3 {
-            let uniqueChars = Set(trimmed.lowercased())
-            if uniqueChars.count <= 2 && trimmed.count > 10 {
+        if cleaned.count > 3 {
+            let uniqueChars = Set(cleaned.lowercased())
+            if uniqueChars.count <= 2 && cleaned.count > 10 {
                 return ""  // Likely "aaaaa" or "hmhmhm" type artifacts
             }
         }
         
-        return trimmed
+        return cleaned
     }
     
     private func convertAudioDataToFloatArray(_ data: Data) -> [Float] {

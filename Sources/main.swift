@@ -34,7 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appState = AppState.shared
         setupAppStateListeners()
         
-        // Fix regression: Explicitly open settings window on launch.
+        // Open settings on launch  
         openSettings()
         
         logger.info("Superhoarse launched successfully as a menu bar app.")

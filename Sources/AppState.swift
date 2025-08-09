@@ -237,7 +237,7 @@ class AppState: ObservableObject {
         
         logger.info("About to insert text: '\(text)'")
         
-        // Ensure we can post events to the current focused application
+        // Create keyboard event for text insertion
         guard let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true) else {
             logger.error("Failed to create CGEvent")
             return
@@ -246,11 +246,11 @@ class AppState: ObservableObject {
         let unicodeString = Array(text.utf16)
         event.keyboardSetUnicodeString(stringLength: unicodeString.count, unicodeString: unicodeString)
         
-        // Post to the active application (not just our app)
+        // Post to the currently focused application (whatever is active right now)
         event.post(tap: .cghidEventTap)
-        logger.info("Text insertion event posted")
+        logger.info("Text insertion event posted to focused application")
         
-        // Also try posting a key-up event to complete the sequence
+        // Post key-up event
         if let upEvent = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) {
             upEvent.keyboardSetUnicodeString(stringLength: unicodeString.count, unicodeString: unicodeString)
             upEvent.post(tap: .cghidEventTap)
