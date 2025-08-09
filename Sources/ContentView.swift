@@ -266,17 +266,13 @@ struct ListeningIndicatorView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Listening...")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
                 Spacer()
                 
                 Button(action: {
                     appState.hideListeningIndicator()
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.8))
                 }
                 .buttonStyle(PlainButtonStyle())
             }
@@ -286,19 +282,21 @@ struct ListeningIndicatorView: View {
             HStack {
                 Text("Press \(appState.getCurrentShortcutString()) to stop")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white.opacity(0.9))
                 
                 Spacer()
                 
                 Text("ESC to close")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white.opacity(0.9))
             }
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.controlBackgroundColor))
+                .fill(Color.black.opacity(0.2))
                 .shadow(radius: 8)
         )
         .background(
@@ -324,29 +322,55 @@ struct WaveformVisualizerView: View {
     @State private var phase: Double = 0.0
     
     var body: some View {
-        HStack(alignment: .center, spacing: 1) {
+        HStack(alignment: .center, spacing: 2) {
             ForEach(0..<waveformBars.count, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: 3)
                     .fill(LinearGradient(
                         gradient: Gradient(colors: [
-                            Color(red: 1.0, green: 0.0, blue: 1.0),  // Magenta
-                            Color(red: 0.8, green: 0.0, blue: 1.0),  // Purple-pink
-                            Color(red: 0.4, green: 0.0, blue: 1.0),  // Deep purple
-                            Color(red: 0.0, green: 0.8, blue: 1.0)   // Cyan
+                            Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.8),  // Magenta
+                            Color(red: 0.8, green: 0.0, blue: 1.0).opacity(0.8),  // Purple-pink
+                            Color(red: 0.4, green: 0.0, blue: 1.0).opacity(0.8),  // Deep purple
+                            Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.8)   // Cyan
                         ]),
                         startPoint: .bottom,
                         endPoint: .top
                     ))
-                    .frame(width: 4, height: max(3, CGFloat(waveformBars[index]) * 80))
+                    .frame(width: 6, height: max(4, CGFloat(waveformBars[index]) * 120))
                     .animation(.easeOut(duration: 0.08), value: waveformBars[index])
-                    .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), radius: 2)
+                    .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.8), radius: 3)
             }
         }
-        .frame(height: 80)
+        .frame(height: 120)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.black.opacity(0.3))
-                .shadow(color: Color(red: 0.4, green: 0.0, blue: 1.0).opacity(0.5), radius: 4)
+            RoundedRectangle(cornerRadius: 20)
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.black.opacity(0.15),
+                            Color(red: 0.1, green: 0.0, blue: 0.2).opacity(0.25)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.5),
+                                    Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.5)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .shadow(color: Color(red: 0.4, green: 0.0, blue: 1.0).opacity(0.6), radius: 8)
+                .shadow(color: Color.black.opacity(0.3), radius: 12)
         )
         .onAppear {
             startWaveformAnimation()
