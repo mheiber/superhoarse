@@ -35,9 +35,9 @@
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.productivity</string>
     
-    <!-- Hide from dock by default (menu bar app) -->
+    <!-- Show in both dock and menu bar -->
     <key>LSUIElement</key>
-    <true/>
+    <false/>
     
     <!-- Required app transport security -->
     <key>NSAppTransportSecurity</key>

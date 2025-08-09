@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import ApplicationServices
+import AppKit
 
 class AppState: ObservableObject {
     @Published var isRecording = false
@@ -77,7 +78,7 @@ class AppState: ObservableObject {
         // Copy to clipboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
+        pasteboard.setString(text, forType: NSPasteboard.PasteboardType.string)
         
         // Insert text at cursor position only if we have permission
         if hasAccessibilityPermission {
@@ -103,11 +104,25 @@ class AppState: ObservableObject {
     }
     
     func requestAccessibilityPermissions() {
+        // First, try to perform an actual accessibility action to trigger the system prompt
+        let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)
+        event?.post(tap: .cghidEventTap)
+        
+        // Then check permissions with prompt
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
         
         DispatchQueue.main.async {
             self.hasAccessibilityPermission = trusted
+        }
+        
+        // If still not trusted, open System Preferences directly
+        if !trusted {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
         }
     }
     
@@ -148,7 +163,8 @@ class AppState: ObservableObject {
         }
         
         let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)
-        event?.keyboardSetUnicodeString(string: text)
+        let unicodeString = Array(text.utf16)
+        event?.keyboardSetUnicodeString(stringLength: unicodeString.count, unicodeString: unicodeString)
         event?.post(tap: .cghidEventTap)
     }
 }

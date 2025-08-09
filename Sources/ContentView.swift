@@ -136,7 +136,91 @@ struct ControlsView: View {
     }
 }
 
-#Preview {
-    ContentView()
-        .environmentObject(AppState())
+struct SettingsView: View {
+    @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
+    @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49 // Space key
+    
+    private let modifierOptions = [
+        (name: "⌘⇧ (Cmd+Shift)", value: 0),
+        (name: "⌘⌥ (Cmd+Option)", value: 1),
+        (name: "⌘⌃ (Cmd+Control)", value: 2),
+        (name: "⌥⇧ (Option+Shift)", value: 3)
+    ]
+    
+    private let keyOptions = [
+        (name: "Space", code: 49),
+        (name: "R", code: 15),
+        (name: "T", code: 17),
+        (name: "M", code: 46),
+        (name: "V", code: 9)
+    ]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Keyboard Shortcut Configuration")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Modifier Keys:")
+                    .font(.headline)
+                
+                Picker("Modifier", selection: $hotKeyModifier) {
+                    ForEach(modifierOptions, id: \.value) { option in
+                        Text(option.name).tag(option.value)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+            
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Key:")
+                    .font(.headline)
+                
+                Picker("Key", selection: $hotKeyCode) {
+                    ForEach(keyOptions, id: \.code) { option in
+                        Text(option.name).tag(option.code)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+            
+            HStack {
+                Text("Current shortcut:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(currentShortcutString)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            
+            Spacer()
+            
+            HStack {
+                Spacer()
+                Button("Apply Changes") {
+                    NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding()
+        .frame(width: 400, height: 200)
+    }
+    
+    private var currentShortcutString: String {
+        let modifierName = modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧"
+        let keyName = keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space"
+        return "\(modifierName.components(separatedBy: " ").first ?? "⌘⇧") + \(keyName)"
+    }
 }
+
+extension Notification.Name {
+    static let hotKeyChanged = Notification.Name("hotKeyChanged")
+}
+
+// Preview disabled due to macro compatibility issues
+// #Preview {
+//     ContentView()
+//         .environmentObject(AppState())
+// }

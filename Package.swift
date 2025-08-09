@@ -4,8 +4,7 @@ import PackageDescription
 let package = Package(
     name: "SuperWhisperLite",
     platforms: [
-        .macOS(.v13),
-        .linux
+        .macOS(.v13)
     ],
     products: [
         .executable(

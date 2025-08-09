@@ -1,2 +1,36 @@
-swift-6.0.2-ubuntu24.04-aarch64.tar.gz
-.*~
+# Swift Package Manager
+.build/
+Packages/
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# App bundle (built artifact)
+SuperWhisperLite.app/
+
+# Temporary files
+*.tmp
+*.temp
+
+# SwiftUI previews
+*.swiftpm
+
+# Finder
+.localized
+
+# Built binary (from make install)
+*.app
+
+# Downloaded models
+Models/

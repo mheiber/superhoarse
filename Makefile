@@ -19,7 +19,7 @@ install: build
 	mkdir -p SuperWhisperLite.app/Contents/MacOS
 	mkdir -p SuperWhisperLite.app/Contents/Resources
 	cp .build/release/SuperWhisperLite SuperWhisperLite.app/Contents/MacOS/
-	cp Sources/Info.plist SuperWhisperLite.app/Contents/
+	cp Info.plist SuperWhisperLite.app/Contents/
 	@echo "Installing to /Applications..."
 	sudo cp -R SuperWhisperLite.app /Applications/
 	@echo "SuperWhisper Lite installed successfully!"

@@ -3,7 +3,7 @@ import AVFoundation
 
 class AudioRecorder: NSObject, AVAudioRecorderDelegate {
     private var audioRecorder: AVAudioRecorder?
-    private var recordingSession: AVAudioSession?
+    // AVAudioSession is not available on macOS, using AVAudioEngine instead
     private var recordingURL: URL?
     private var completionHandler: ((Data?) -> Void)?
     
