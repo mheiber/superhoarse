@@ -4,7 +4,7 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 24) {
             if !appState.isInitialized {
                 ProgressView("Initializing Whisper...")
                     .progressViewStyle(CircularProgressViewStyle())
@@ -17,15 +17,11 @@ struct ContentView: View {
                 
                 RecordingStatusView()
                 
-                TranscriptionView()
-                
-                ControlsView()
-                
                 KeyboardShortcutConfigView()
             }
         }
         .padding()
-        .frame(width: 400, height: appState.hasAccessibilityPermission ? 420 : 500)
+        .frame(width: 400, height: appState.hasAccessibilityPermission ? 350 : 430)
         .background(Color(.windowBackgroundColor))
     }
 }
@@ -161,87 +157,98 @@ struct KeyboardShortcutConfigView: View {
     ]
     
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Settings")
-                    .font(.headline)
-                Spacer()
-            }
-            
+        VStack(spacing: 20) {
             // Speech Engine Selection
-            HStack {
-                Text("Speech Engine:")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Speech Engine")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                }
                 
-                Spacer()
-                
-                Picker("Speech Engine", selection: $appState.currentSpeechEngine) {
-                    ForEach(SpeechEngineType.allCases, id: \.self) { engine in
-                        Text(engine.displayName).tag(engine)
+                HStack {
+                    Text("Choose recognition engine:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $appState.currentSpeechEngine) {
+                        ForEach(SpeechEngineType.allCases, id: \.self) { engine in
+                            Text(engine.displayName).tag(engine)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 180)
+                    .onChange(of: appState.currentSpeechEngine) { newEngine in
+                        appState.switchSpeechEngine(to: newEngine)
                     }
                 }
-                .pickerStyle(.menu)
-                .frame(width: 160)
-                .onChange(of: appState.currentSpeechEngine) { newEngine in
-                    appState.switchSpeechEngine(to: newEngine)
-                }
             }
+            .padding(.vertical, 8)
             
             Divider()
             
             // Keyboard Shortcut Section
-            HStack {
-                Text("Keyboard Shortcut")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text(currentShortcutString)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
-            }
-            
-            HStack(spacing: 15) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Modifier:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Picker("Modifier", selection: $hotKeyModifier) {
-                        ForEach(modifierOptions, id: \.value) { option in
-                            Text(option.name).tag(option.value)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 160)
-                }
-                
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Key:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Picker("Key", selection: $hotKeyCode) {
-                        ForEach(keyOptions, id: \.code) { option in
-                            Text(option.name).tag(option.code)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 100)
-                }
-                
-                VStack {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Keyboard Shortcut")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                     Spacer()
-                    Button("Apply") {
-                        NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                    Text(currentShortcutString)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.controlBackgroundColor))
+                        .cornerRadius(4)
+                }
+                
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Modifier:")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Picker("", selection: $hotKeyModifier) {
+                            ForEach(modifierOptions, id: \.value) { option in
+                                Text(option.name).tag(option.value)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 170)
+                        .onChange(of: hotKeyModifier) { _ in
+                            NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Key:")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Picker("", selection: $hotKeyCode) {
+                            ForEach(keyOptions, id: \.code) { option in
+                                Text(option.name).tag(option.code)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        .onChange(of: hotKeyCode) { _ in
+                            NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                        }
+                    }
+                    
+                    Spacer()
                 }
             }
+            .padding(.vertical, 8)
+            Spacer()
         }
-        .padding()
+        .padding(20)
         .background(Color(.controlBackgroundColor))
-        .cornerRadius(8)
+        .cornerRadius(12)
     }
     
     private var currentShortcutString: String {
