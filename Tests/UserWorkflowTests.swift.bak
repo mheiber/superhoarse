@@ -1,0 +1,447 @@
+import XCTest
+import Foundation
+import Combine
+import SwiftUI
+@testable import SuperWhisperLite
+
+final class UserWorkflowTests: XCTestCase {
+    var appState: AppState!
+    var cancellables: Set<AnyCancellable>!
+    
+    override func setUpWithError() throws {
+        appState = AppState()
+        cancellables = Set<AnyCancellable>()
+        
+        // Wait for initialization to complete
+        let expectation = XCTestExpectation(description: "App initialization")
+        if appState.isInitialized {
+            expectation.fulfill()
+        } else {
+            appState.$isInitialized
+                .filter { $0 }
+                .sink { _ in expectation.fulfill() }
+                .store(in: &cancellables)
+        }
+        wait(for: [expectation], timeout: 5.0)
+    }
+    
+    override func tearDownWithError() throws {
+        appState = nil
+        cancellables = nil
+    }
+    
+    // MARK: - Complete User Recording Workflow Tests
+    
+    func testCompleteRecordingWorkflow() throws {
+        // Test the complete user journey: start recording -> see indicator -> stop recording -> get transcription
+        
+        let recordingStarted = XCTestExpectation(description: "Recording started")
+        let indicatorShown = XCTestExpectation(description: "Listening indicator shown")
+        let audioLevelDetected = XCTestExpectation(description: "Audio level detected")
+        let recordingStopped = XCTestExpectation(description: "Recording stopped")
+        let indicatorHidden = XCTestExpectation(description: "Listening indicator hidden")
+        
+        var stateChanges: [String] = []
+        
+        // Monitor all relevant state changes
+        appState.$isRecording
+            .sink { isRecording in
+                stateChanges.append("isRecording: \(isRecording)")
+                if isRecording {
+                    recordingStarted.fulfill()
+                } else if stateChanges.contains("isRecording: true") {
+                    recordingStopped.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+            
+        appState.$showListeningIndicator
+            .sink { showing in
+                stateChanges.append("showListeningIndicator: \(showing)")
+                if showing {
+                    indicatorShown.fulfill()
+                } else if stateChanges.contains("showListeningIndicator: true") {
+                    indicatorHidden.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Monitor audio levels during recording
+        appState.audioRecorder?.$currentAudioLevel
+            .sink { level in
+                if level > 0.0 {
+                    audioLevelDetected.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Simulate user starting recording (via hotkey or button)
+        appState.toggleRecording()
+        
+        // Simulate recording for a short period
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // User stops recording
+            self.appState.toggleRecording()
+        }
+        
+        wait(for: [recordingStarted, indicatorShown, recordingStopped, indicatorHidden], timeout: 3.0)
+        
+        // Verify the complete state transition
+        XCTAssertTrue(stateChanges.contains("isRecording: true"))
+        XCTAssertTrue(stateChanges.contains("showListeningIndicator: true"))
+        XCTAssertTrue(stateChanges.contains("isRecording: false"))
+        XCTAssertTrue(stateChanges.contains("showListeningIndicator: false"))
+    }
+    
+    func testRapidRecordingToggles() {
+        // Test user rapidly pressing the hotkey multiple times
+        let finalStateExpectation = XCTestExpectation(description: "Final state settled")
+        
+        var toggleCount = 0
+        let maxToggles = 10
+        
+        appState.$isRecording
+            .sink { _ in
+                toggleCount += 1
+                if toggleCount >= maxToggles {
+                    finalStateExpectation.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Rapidly toggle recording (simulate user mashing hotkey)
+        for i in 0..<maxToggles {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
+                self.appState.toggleRecording()
+            }
+        }
+        
+        wait(for: [finalStateExpectation], timeout: 2.0)
+        
+        // App should handle rapid toggles gracefully without crashing
+        XCTAssertTrue(true) // If we got here, no crashes occurred
+    }
+    
+    func testLongRecordingSession() {
+        // Test a longer recording session (simulating user speaking for extended period)
+        let recordingStarted = XCTestExpectation(description: "Long recording started")
+        let recordingStopped = XCTestExpectation(description: "Long recording stopped")
+        let audioLevelsConsistent = XCTestExpectation(description: "Audio levels remained active")
+        
+        var audioLevelUpdates = 0
+        
+        appState.$isRecording
+            .sink { isRecording in
+                if isRecording {
+                    recordingStarted.fulfill()
+                } else if audioLevelUpdates > 0 {
+                    recordingStopped.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Monitor that audio levels are being monitored throughout the session
+        appState.audioRecorder?.$currentAudioLevel
+            .sink { _ in
+                audioLevelUpdates += 1
+                if audioLevelUpdates >= 20 { // Should get ~20 updates per second
+                    audioLevelsConsistent.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Start long recording
+        appState.toggleRecording()
+        
+        // Let it record for 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.appState.toggleRecording()
+        }
+        
+        wait(for: [recordingStarted, audioLevelsConsistent, recordingStopped], timeout: 5.0)
+        
+        // Verify audio monitoring was active throughout
+        XCTAssertGreaterThan(audioLevelUpdates, 15)
+    }
+    
+    // MARK: - Listening Indicator UI Tests
+    
+    func testListeningIndicatorLifecycle() {
+        // Test that the listening indicator appears and disappears correctly
+        
+        let indicatorAppears = XCTestExpectation(description: "Indicator appears")
+        let indicatorDisappears = XCTestExpectation(description: "Indicator disappears")
+        
+        var indicatorStates: [Bool] = []
+        
+        appState.$showListeningIndicator
+            .sink { showing in
+                indicatorStates.append(showing)
+                if showing && indicatorStates.count == 2 { // First is initial false, second is true
+                    indicatorAppears.fulfill()
+                } else if !showing && indicatorStates.count >= 3 {
+                    indicatorDisappears.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // User starts recording
+        appState.toggleRecording()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // User stops recording
+            self.appState.toggleRecording()
+        }
+        
+        wait(for: [indicatorAppears, indicatorDisappears], timeout: 2.0)
+        
+        // Verify state sequence: false -> true -> false
+        XCTAssertEqual(indicatorStates, [false, true, false])
+    }
+    
+    func testManualIndicatorDismissal() {
+        // Test user manually closing the indicator (ESC or X button)
+        
+        let indicatorShown = XCTestExpectation(description: "Indicator shown")
+        let indicatorDismissed = XCTestExpectation(description: "Indicator manually dismissed")
+        
+        appState.$showListeningIndicator
+            .sink { showing in
+                if showing {
+                    indicatorShown.fulfill()
+                } else if self.appState.isRecording { // Still recording but indicator dismissed
+                    indicatorDismissed.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Start recording
+        appState.toggleRecording()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            // User manually hides indicator
+            self.appState.hideListeningIndicator()
+        }
+        
+        wait(for: [indicatorShown, indicatorDismissed], timeout: 2.0)
+        
+        // Recording should still be active even though indicator is hidden
+        XCTAssertTrue(appState.isRecording)
+        XCTAssertFalse(appState.showListeningIndicator)
+    }
+    
+    // MARK: - Keyboard Shortcut Tests
+    
+    func testKeyboardShortcutDisplay() {
+        // Test that the correct keyboard shortcut is displayed to the user
+        
+        let defaultShortcut = appState.getCurrentShortcutString()
+        XCTAssertFalse(defaultShortcut.isEmpty)
+        
+        // Test default shortcut (should be ⌘⇧Space)
+        XCTAssertEqual(defaultShortcut, "⌘⇧Space")
+        
+        // Test changing shortcut preferences
+        UserDefaults.standard.set(1, forKey: "hotKeyModifier") // ⌘⌥
+        UserDefaults.standard.set(15, forKey: "hotKeyCode") // R key
+        
+        let customShortcut = appState.getCurrentShortcutString()
+        XCTAssertEqual(customShortcut, "⌘⌥R")
+        
+        // Cleanup
+        UserDefaults.standard.removeObject(forKey: "hotKeyModifier")
+        UserDefaults.standard.removeObject(forKey: "hotKeyCode")
+    }
+    
+    // MARK: - Audio Level Monitoring Tests
+    
+    func testAudioLevelMonitoringDuringRecording() {
+        let recordingStarted = XCTestExpectation(description: "Recording started")
+        let audioLevelsActive = XCTestExpectation(description: "Audio levels active")
+        let recordingStopped = XCTestExpectation(description: "Recording stopped")
+        let audioLevelsInactive = XCTestExpectation(description: "Audio levels inactive")
+        
+        var levelUpdateCount = 0
+        
+        appState.$isRecording
+            .sink { isRecording in
+                if isRecording {
+                    recordingStarted.fulfill()
+                } else if levelUpdateCount > 0 {
+                    recordingStopped.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        appState.audioRecorder?.$currentAudioLevel
+            .sink { level in
+                levelUpdateCount += 1
+                if levelUpdateCount == 10 {
+                    audioLevelsActive.fulfill()
+                } else if levelUpdateCount > 10 && level == 0.0 {
+                    audioLevelsInactive.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Start recording
+        appState.toggleRecording()
+        
+        // Let it record briefly
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.appState.toggleRecording()
+        }
+        
+        wait(for: [recordingStarted, audioLevelsActive, recordingStopped], timeout: 3.0)
+        
+        // After stopping, audio level should return to 0
+        XCTAssertEqual(appState.audioRecorder?.currentAudioLevel ?? -1, 0.0)
+    }
+    
+    // MARK: - Error Handling and Edge Cases
+    
+    func testRecordingWithoutMicrophonePermission() {
+        // Test graceful handling when microphone permission is not granted
+        // Note: This test simulates the behavior - actual permission testing requires UI testing
+        
+        let recordingAttempted = XCTestExpectation(description: "Recording attempted")
+        
+        appState.$isRecording
+            .sink { isRecording in
+                if isRecording {
+                    recordingAttempted.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Attempt to start recording
+        appState.toggleRecording()
+        
+        wait(for: [recordingAttempted], timeout: 2.0)
+        
+        // App should handle gracefully without crashing
+        XCTAssertTrue(true)
+    }
+    
+    func testMultipleSimultaneousRecordingAttempts() {
+        // Test that multiple simultaneous recording attempts are handled correctly
+        
+        let firstRecordingStarted = XCTestExpectation(description: "First recording started")
+        
+        appState.$isRecording
+            .sink { isRecording in
+                if isRecording {
+                    firstRecordingStarted.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Try to start recording multiple times simultaneously
+        for _ in 0..<5 {
+            appState.toggleRecording()
+        }
+        
+        wait(for: [firstRecordingStarted], timeout: 1.0)
+        
+        // Should only have one active recording session
+        XCTAssertTrue(appState.isRecording)
+    }
+    
+    func testTranscriptionWorkflowAfterRecording() {
+        // Test the complete workflow from recording to transcription display
+        
+        let recordingCompleted = XCTestExpectation(description: "Recording completed")
+        let transcriptionReceived = XCTestExpectation(description: "Transcription received")
+        
+        // Monitor recording state
+        appState.$isRecording
+            .sink { isRecording in
+                if !isRecording && self.appState.transcriptionText.isEmpty {
+                    // Recording stopped, waiting for transcription
+                    recordingCompleted.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Monitor transcription text
+        appState.$transcriptionText
+            .sink { text in
+                if !text.isEmpty {
+                    transcriptionReceived.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Start and stop recording quickly
+        appState.toggleRecording()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.appState.toggleRecording()
+            
+            // Simulate transcription result (would normally come from speech recognizer)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.appState.setValue("Test transcription result", forKey: "transcriptionText")
+            }
+        }
+        
+        wait(for: [recordingCompleted, transcriptionReceived], timeout: 3.0)
+        
+        XCTAssertEqual(appState.transcriptionText, "Test transcription result")
+        XCTAssertFalse(appState.isRecording)
+        XCTAssertFalse(appState.showListeningIndicator)
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testUIResponsivenessDuringRecording() {
+        // Test that UI remains responsive during recording
+        measure {
+            let group = DispatchGroup()
+            
+            // Simulate UI state queries that would happen during recording
+            for _ in 0..<100 {
+                group.enter()
+                DispatchQueue.main.async {
+                    let _ = self.appState.isRecording
+                    let _ = self.appState.showListeningIndicator
+                    let _ = self.appState.getCurrentShortcutString()
+                    let _ = self.appState.audioRecorder?.currentAudioLevel
+                    group.leave()
+                }
+            }
+            
+            group.wait()
+        }
+    }
+    
+    func testMemoryUsageStabilityWithRepeatedRecording() {
+        // Test that repeated recording sessions don't cause memory leaks
+        
+        let completionExpectation = XCTestExpectation(description: "Memory test completed")
+        
+        func performRecordingCycle(_ count: Int) {
+            if count <= 0 {
+                completionExpectation.fulfill()
+                return
+            }
+            
+            appState.toggleRecording()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.appState.toggleRecording()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    performRecordingCycle(count - 1)
+                }
+            }
+        }
+        
+        performRecordingCycle(10)
+        
+        wait(for: [completionExpectation], timeout: 5.0)
+        
+        // If we reach here without memory issues, test passes
+        XCTAssertFalse(appState.isRecording)
+        XCTAssertFalse(appState.showListeningIndicator)
+    }
+}

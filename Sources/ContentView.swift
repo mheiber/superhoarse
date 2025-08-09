@@ -215,6 +215,152 @@ struct SettingsView: View {
     }
 }
 
+struct ListeningIndicatorView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var waveformData: [Float] = Array(repeating: 0.0, count: 20)
+    @State private var animationPhase = 0.0
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Listening...")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Button(action: {
+                    appState.hideListeningIndicator()
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            WaveformVisualizerView(audioLevel: appState.audioRecorder?.currentAudioLevel ?? 0.0)
+            
+            HStack {
+                Text("Press \(appState.getCurrentShortcutString()) to stop")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("ESC to close")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.controlBackgroundColor))
+                .shadow(radius: 8)
+        )
+        .background(
+            KeyEventHandlingView(onEscape: {
+                appState.hideListeningIndicator()
+            })
+        )
+        .onAppear {
+            // Auto-focus the window to receive key events
+            DispatchQueue.main.async {
+                NSApp.keyWindow?.makeFirstResponder(NSApp.keyWindow?.contentView)
+            }
+        }
+        .transition(.scale.combined(with: .opacity))
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showListeningIndicator)
+    }
+}
+
+struct WaveformVisualizerView: View {
+    let audioLevel: Float
+    @State private var waveformBars: [Float] = Array(repeating: 0.1, count: 24)
+    @State private var animationTimer: Timer?
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 2) {
+            ForEach(0..<waveformBars.count, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(LinearGradient(
+                        gradient: Gradient(colors: [.green, .yellow, .red]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    ))
+                    .frame(width: 3, height: max(2, CGFloat(waveformBars[index]) * 40))
+                    .animation(.easeInOut(duration: 0.1), value: waveformBars[index])
+            }
+        }
+        .frame(height: 40)
+        .onAppear {
+            startWaveformAnimation()
+        }
+        .onDisappear {
+            stopWaveformAnimation()
+        }
+        .onChange(of: audioLevel) { newLevel in
+            updateWaveform(with: newLevel)
+        }
+    }
+    
+    private func startWaveformAnimation() {
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            updateWaveform(with: audioLevel)
+        }
+    }
+    
+    private func stopWaveformAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+    }
+    
+    private func updateWaveform(with level: Float) {
+        let currentLevel = max(0.1, level)
+        
+        for i in 0..<waveformBars.count {
+            let baseHeight = currentLevel * (0.3 + Float.random(in: 0...0.7))
+            let variation = Float.random(in: -0.1...0.1)
+            waveformBars[i] = min(1.0, max(0.1, baseHeight + variation))
+        }
+    }
+}
+
+struct KeyEventHandlingView: NSViewRepresentable {
+    let onEscape: () -> Void
+    
+    func makeNSView(context: Context) -> KeyCaptureView {
+        let view = KeyCaptureView()
+        view.onEscape = onEscape
+        return view
+    }
+    
+    func updateNSView(_ nsView: KeyCaptureView, context: Context) {
+        nsView.onEscape = onEscape
+    }
+}
+
+class KeyCaptureView: NSView {
+    var onEscape: (() -> Void)?
+    
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // ESC key
+            onEscape?()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.window?.makeFirstResponder(self)
+    }
+}
+
 extension Notification.Name {
     static let hotKeyChanged = Notification.Name("hotKeyChanged")
 }

@@ -1,11 +1,14 @@
 import Foundation
 import AVFoundation
 
-class AudioRecorder: NSObject, AVAudioRecorderDelegate {
+class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private var audioRecorder: AVAudioRecorder?
     // AVAudioSession is not available on macOS, using AVAudioEngine instead
     private var recordingURL: URL?
     private var completionHandler: ((Data?) -> Void)?
+    
+    @Published var currentAudioLevel: Float = 0.0
+    private var levelTimer: Timer?
     
     override init() {
         super.init()
@@ -54,7 +57,10 @@ class AudioRecorder: NSObject, AVAudioRecorderDelegate {
         do {
             audioRecorder = try AVAudioRecorder(url: url, settings: settings)
             audioRecorder?.delegate = self
+            audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
+            
+            startLevelMonitoring()
             
             print("Started recording to: \(url.path)")
         } catch {
@@ -68,6 +74,7 @@ class AudioRecorder: NSObject, AVAudioRecorderDelegate {
             return 
         }
         
+        stopLevelMonitoring()
         completionHandler = completion
         audioRecorder?.stop()
     }
@@ -99,5 +106,34 @@ class AudioRecorder: NSObject, AVAudioRecorderDelegate {
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         print("Audio recording error: \(error?.localizedDescription ?? "Unknown error")")
         completionHandler?(nil)
+    }
+    
+    // MARK: - Audio Level Monitoring
+    
+    private func startLevelMonitoring() {
+        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            self?.updateAudioLevel()
+        }
+    }
+    
+    private func stopLevelMonitoring() {
+        levelTimer?.invalidate()
+        levelTimer = nil
+        currentAudioLevel = 0.0
+    }
+    
+    private func updateAudioLevel() {
+        guard let recorder = audioRecorder, recorder.isRecording else { return }
+        
+        recorder.updateMeters()
+        let averagePower = recorder.averagePower(forChannel: 0)
+        
+        // Convert decibel power to a linear scale (0.0 to 1.0)
+        // averagePower ranges from -160 (silence) to 0 (maximum)
+        let normalizedLevel = max(0.0, (averagePower + 50.0) / 50.0)
+        
+        DispatchQueue.main.async {
+            self.currentAudioLevel = normalizedLevel
+        }
     }
 }

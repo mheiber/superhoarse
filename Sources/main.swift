@@ -1,14 +1,14 @@
 import SwiftUI
 import AppKit
+import Combine
 
 struct SuperWhisperLiteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var appState = AppState()
     
     var body: some Scene {
         WindowGroup("SuperWhisper Lite") {
             ContentView()
-                .environmentObject(appState)
+                .environmentObject(AppState.shared)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -18,11 +18,17 @@ struct SuperWhisperLiteApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
+    private var listeningIndicatorWindow: NSWindow?
+    private var appState: AppState?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Show in dock and menu bar
         NSApp.setActivationPolicy(.regular)
         setupMenuBar()
+        
+        // Initialize AppState early to ensure hotkeys and recording work
+        _ = AppState.shared  // Force initialization
+        setupAppState()
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool {
@@ -71,6 +77,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    private func setupAppState() {
+        // Use the shared AppState instance
+        appState = AppState.shared
+        
+        // Monitor for recording state changes
+        appState?.$showListeningIndicator
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] showIndicator in
+                if showIndicator {
+                    self?.showListeningIndicator()
+                } else {
+                    self?.hideListeningIndicator()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    private func showListeningIndicator() {
+        guard let appState = appState else { return }
+        
+        if listeningIndicatorWindow == nil {
+            let indicatorView = ListeningIndicatorView()
+                .environmentObject(appState)
+            
+            let hostingController = NSHostingController(rootView: indicatorView)
+            
+            listeningIndicatorWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 400, height: 120),
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            
+            listeningIndicatorWindow?.contentViewController = hostingController
+            listeningIndicatorWindow?.isOpaque = false
+            listeningIndicatorWindow?.backgroundColor = NSColor.clear
+            listeningIndicatorWindow?.level = .floating
+            listeningIndicatorWindow?.isMovableByWindowBackground = true
+            listeningIndicatorWindow?.isReleasedWhenClosed = false
+            
+            // Position at top center of screen
+            if let screen = NSScreen.main {
+                let screenFrame = screen.visibleFrame
+                let windowSize = listeningIndicatorWindow?.frame.size ?? CGSize(width: 400, height: 120)
+                let x = screenFrame.midX - windowSize.width / 2
+                let y = screenFrame.maxY - windowSize.height - 20
+                listeningIndicatorWindow?.setFrameOrigin(CGPoint(x: x, y: y))
+            }
+        }
+        
+        listeningIndicatorWindow?.makeKeyAndOrderFront(nil)
+    }
+    
+    private func hideListeningIndicator() {
+        listeningIndicatorWindow?.orderOut(nil)
     }
 }
 

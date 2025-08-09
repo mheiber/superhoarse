@@ -67,8 +67,8 @@ class SpeechRecognizer {
     private func downloadBaseModel(to path: String, completion: @escaping (Bool) -> Void) {
         // Download the base Whisper model with integrity verification
         let urlString = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"
-        // Known SHA-256 hash for ggml-base.bin model (should be updated when model changes)
-        let expectedHash = "60ed5bc3dd14eea856493d334349b405782e8c6c5bb8f41058bfbaafa54a4b6b"
+        // Known SHA-256 hash for ggml-base.bin model from HuggingFace
+        let expectedHash = "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"
         
         guard let url = URL(string: urlString) else {
             print("Invalid model download URL")
@@ -103,7 +103,18 @@ class SpeechRecognizer {
             }
             
             do {
-                // Move downloaded file to final location (hash check disabled)
+                // Verify SHA-256 hash before moving file
+                let data = try Data(contentsOf: tempURL)
+                let calculatedHash = SHA256.hash(data: data)
+                let hashString = calculatedHash.compactMap { String(format: "%02x", $0) }.joined()
+                
+                guard hashString == expectedHash else {
+                    print("Hash verification failed. Expected: \(expectedHash), Got: \(hashString)")
+                    completion(false)
+                    return
+                }
+                
+                // Move downloaded file to final location
                 try FileManager.default.moveItem(at: tempURL, to: URL(fileURLWithPath: path))
                 print("Model downloaded and verified successfully")
                 completion(true)
@@ -115,7 +126,7 @@ class SpeechRecognizer {
     }
     
     private func loadModel(at path: String) {
-        var params = whisper_context_default_params()
+        let params = whisper_context_default_params()
         whisperContext = whisper_init_from_file_with_params(path, params)
         
         if whisperContext != nil {
