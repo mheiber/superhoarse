@@ -156,13 +156,38 @@ class SpeechRecognizer {
             return
         }
         
-        // Set up Whisper parameters
+        // Skip very short recordings (less than 0.5 seconds at 16kHz)
+        // These often produce artifacts like [BLANK_AUDIO]
+        let minimumSamples = 8000  // 0.5 seconds at 16kHz
+        if floatArray.count < minimumSamples {
+            print("Audio too short (\(floatArray.count) samples), skipping transcription")
+            completion(nil)
+            return
+        }
+        
+        // Check for mostly silent audio (RMS < threshold)
+        let rmsLevel = sqrt(floatArray.map { $0 * $0 }.reduce(0, +) / Float(floatArray.count))
+        if rmsLevel < 0.01 {  // Very quiet threshold
+            print("Audio too quiet (RMS: \(rmsLevel)), skipping transcription")
+            completion(nil)
+            return
+        }
+        
+        // Set up Whisper parameters with artifact reduction
         var params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
         let langId = whisper_lang_id("en")
         params.language = langId >= 0 ? "en".withCString { $0 } : nil
         params.translate = false
         params.print_realtime = false
         params.print_progress = false
+        
+        // Research-based parameter tuning to reduce artifacts
+        params.suppress_blank = true        // Suppress blank outputs
+        params.suppress_non_speech_tokens = false  // Keep false to avoid hallucinations!
+        params.temperature = 0.0           // Use greedy decoding (more deterministic) 
+        params.max_tokens = 0              // No token limit
+        params.audio_ctx = 0               // Use full audio context
+        params.initial_prompt = "".withCString { $0 }  // No initial prompt to avoid bias
         
         // Run transcription
         let result = whisper_full(context, params, floatArray, Int32(floatArray.count))
@@ -172,19 +197,75 @@ class SpeechRecognizer {
             return
         }
         
-        // Extract text
+        // Extract text with artifact filtering
         let segmentCount = whisper_full_n_segments(context)
         var transcription = ""
         
         for i in 0..<segmentCount {
             if let segmentText = whisper_full_get_segment_text(context, i) {
-                transcription += String(cString: segmentText)
+                let segment = String(cString: segmentText)
+                
+                // Skip common Whisper artifacts
+                let cleanedSegment = filterTranscriptionArtifacts(segment)
+                if !cleanedSegment.isEmpty {
+                    transcription += cleanedSegment
+                }
             }
         }
         
+        let finalResult = transcription.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         DispatchQueue.main.async {
-            completion(transcription.trimmingCharacters(in: .whitespacesAndNewlines))
+            // Return nil if result is empty or only contains artifacts
+            completion(finalResult.isEmpty ? nil : finalResult)
         }
+    }
+    
+    private func filterTranscriptionArtifacts(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Common Whisper artifacts to filter out
+        let artifacts = [
+            "[BLANK_AUDIO]",
+            "[BLANK AUDIO]", 
+            "[Music]",
+            "[Applause]",
+            "[Laughter]",
+            "[Background music]",
+            "[Background noise]",
+            "[Silence]",
+            "[No speech]",
+            "[Inaudible]",
+            "(blank)",
+            "(silence)",
+            "(music)",
+            "(noise)",
+            "♪",
+            "♫"
+        ]
+        
+        // Check if the entire segment is an artifact
+        for artifact in artifacts {
+            if trimmed.caseInsensitiveCompare(artifact) == .orderedSame ||
+               trimmed.lowercased().contains(artifact.lowercased()) && trimmed.count < 50 {
+                return ""
+            }
+        }
+        
+        // Filter out very short unclear segments (likely artifacts)
+        if trimmed.count < 3 && !trimmed.allSatisfy({ $0.isLetter || $0.isNumber }) {
+            return ""
+        }
+        
+        // Filter repetitive characters (common artifact pattern)
+        if trimmed.count > 3 {
+            let uniqueChars = Set(trimmed.lowercased())
+            if uniqueChars.count <= 2 && trimmed.count > 10 {
+                return ""  // Likely "aaaaa" or "hmhmhm" type artifacts
+            }
+        }
+        
+        return trimmed
     }
     
     private func convertAudioDataToFloatArray(_ data: Data) -> [Float] {
