@@ -15,24 +15,24 @@ clean:
 
 # Install to Applications (requires build first)
 install: build
-	@echo "Killing existing SuperWhisperLite processes..."
-	-pkill -f "SuperWhisperLite" || true
+	@echo "Killing existing Superhoarse processes..."
+	-pkill -f "Superhoarse" || true
 	@echo "Creating application bundle..."
-	mkdir -p SuperWhisperLite.app/Contents/MacOS
-	mkdir -p SuperWhisperLite.app/Contents/Resources
-	cp .build/release/SuperWhisperLite SuperWhisperLite.app/Contents/MacOS/
-	cp Info.plist SuperWhisperLite.app/Contents/
+	mkdir -p Superhoarse.app/Contents/MacOS
+	mkdir -p Superhoarse.app/Contents/Resources
+	cp .build/release/Superhoarse Superhoarse.app/Contents/MacOS/
+	cp Info.plist Superhoarse.app/Contents/
 	@echo "Setting proper permissions..."
-	chmod +x SuperWhisperLite.app/Contents/MacOS/SuperWhisperLite
+	chmod +x Superhoarse.app/Contents/MacOS/Superhoarse
 	@echo "Removing existing installation..."
-	sudo rm -rf /Applications/SuperWhisperLite.app
+	sudo rm -rf /Applications/Superhoarse.app
 	@echo "Installing to /Applications..."
-	sudo cp -R SuperWhisperLite.app /Applications/
+	sudo cp -R Superhoarse.app /Applications/
 	@echo "Setting ownership to current user..."
-	sudo chown -R $(USER):staff /Applications/SuperWhisperLite.app
-	@echo "SuperWhisper Lite installed successfully!"
+	sudo chown -R $(USER):staff /Applications/Superhoarse.app
+	@echo "Superhoarse installed successfully!"
 	@echo ""
-	@echo "You can now launch from /Applications/SuperWhisperLite.app"
+	@echo "You can now launch from /Applications/Superhoarse.app"
 
 # Development setup
 setup:

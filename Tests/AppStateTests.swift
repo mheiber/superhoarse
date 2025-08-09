@@ -1,7 +1,7 @@
 import XCTest
 import Foundation
 import Combine
-@testable import SuperWhisperLite
+@testable import Superhoarse
 
 final class AppStateTests: XCTestCase {
     var appState: AppState!

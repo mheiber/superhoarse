@@ -31,7 +31,7 @@ struct ContentView: View {
 struct HeaderView: View {
     var body: some View {
         VStack {
-            Text("SuperWhisper Lite")
+            Text("Superhoarse")
                 .font(.title2)
                 .fontWeight(.semibold)
             

@@ -1,7 +1,7 @@
 import XCTest
 import Foundation
 import AVFoundation
-@testable import SuperWhisperLite
+@testable import Superhoarse
 
 final class AudioRecorderTests: XCTestCase {
     var audioRecorder: AudioRecorder!

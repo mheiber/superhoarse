@@ -5,7 +5,7 @@ import os.log
 
 // Using Settings {} defines the app as a menu bar application.
 // This ensures a single, consistent process, fixing the accessibility permission issue.
-struct SuperWhisperLiteApp: App {
+struct SuperhoarseApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
@@ -37,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Fix regression: Explicitly open settings window on launch.
         openSettings()
         
-        logger.info("SuperWhisperLite launched successfully as a menu bar app.")
+        logger.info("Superhoarse launched successfully as a menu bar app.")
     }
     
     // Keep the app running even when the settings window is closed.
@@ -49,14 +49,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "mic.circle", accessibilityDescription: "SuperWhisper Lite")
-            button.toolTip = "SuperWhisper Lite"
+            button.image = NSImage(systemSymbolName: "mic.circle", accessibilityDescription: "Superhoarse")
+            button.toolTip = "Superhoarse"
         }
         
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Open Settings", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit SuperWhisper Lite", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Superhoarse", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
         statusItem?.menu = menu
     }
@@ -73,7 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 backing: .buffered,
                 defer: false
             )
-            settingsWindow?.title = "SuperWhisper Lite Settings"
+            settingsWindow?.title = "Superhoarse Settings"
             settingsWindow?.contentViewController = hostingController
             settingsWindow?.center()
             // Reuse the window instance instead of releasing it on close.
@@ -151,4 +151,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
 // Main entry point for the SwiftUI application.
-SuperWhisperLiteApp.main()
+SuperhoarseApp.main()

@@ -46,16 +46,16 @@ class SpeechRecognizer {
         let modelsDir: URL
         
         #if os(Linux)
-        // On Linux, use ~/.local/share/SuperWhisperLite/Models
+        // On Linux, use ~/.local/share/Superhoarse/Models
         let homeDir = FileManager.default.homeDirectoryForCurrentUser
         modelsDir = homeDir
             .appendingPathComponent(".local/share")
-            .appendingPathComponent("SuperWhisperLite/Models")
+            .appendingPathComponent("Superhoarse/Models")
         #else
         // On macOS, use the application support directory
         modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, 
                                            in: .userDomainMask).first!
-            .appendingPathComponent("SuperWhisperLite/Models")
+            .appendingPathComponent("Superhoarse/Models")
         #endif
         
         try? FileManager.default.createDirectory(at: modelsDir, 

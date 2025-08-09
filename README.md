@@ -1,4 +1,4 @@
-# SuperWhisper Lite
+# Superhoarse
 
 A lightweight, privacy-focused voice-to-text app for macOS inspired by SuperWhisper. Built with Swift and powered by local AI models for completely offline transcription.
 
@@ -24,7 +24,7 @@ A lightweight, privacy-focused voice-to-text app for macOS inspired by SuperWhis
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd SuperWhisperLite
+cd Superhoarse
 
 # Build and install
 make build
@@ -38,13 +38,13 @@ make install
 swift build -c release
 
 # Create app bundle manually
-mkdir -p SuperWhisperLite.app/Contents/MacOS
-mkdir -p SuperWhisperLite.app/Contents/Resources
-cp .build/release/SuperWhisperLite SuperWhisperLite.app/Contents/MacOS/
-cp Sources/Info.plist SuperWhisperLite.app/Contents/
+mkdir -p Superhoarse.app/Contents/MacOS
+mkdir -p Superhoarse.app/Contents/Resources
+cp .build/release/Superhoarse Superhoarse.app/Contents/MacOS/
+cp Sources/Info.plist Superhoarse.app/Contents/
 
 # Move to Applications
-cp -R SuperWhisperLite.app /Applications/
+cp -R Superhoarse.app /Applications/
 ```
 
 ## Usage
@@ -60,7 +60,7 @@ cp -R SuperWhisperLite.app /Applications/
 
 ## Architecture
 
-SuperWhisper Lite is built with simplicity and performance in mind:
+Superhoarse is built with simplicity and performance in mind:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐

@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "SuperWhisperLite",
+    name: "Superhoarse",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "SuperWhisperLite",
-            targets: ["SuperWhisperLite"]
+            name: "Superhoarse",
+            targets: ["Superhoarse"]
         ),
     ],
     dependencies: [
@@ -17,15 +17,15 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "SuperWhisperLite",
+            name: "Superhoarse",
             dependencies: [
                 .product(name: "whisper", package: "whisper.spm")
             ],
             path: "Sources"
         ),
         .testTarget(
-            name: "SuperWhisperLiteTests",
-            dependencies: ["SuperWhisperLite"],
+            name: "SuperhoarseTests",
+            dependencies: ["Superhoarse"],
             path: "Tests"
         ),
     ]

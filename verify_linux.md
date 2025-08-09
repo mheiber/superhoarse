@@ -1,4 +1,4 @@
-# SuperWhisper Lite Linux Configuration
+# Superhoarse Linux Configuration
 
 ## Changes Made for Linux Support
 
@@ -9,7 +9,7 @@
 
 2. **SpeechRecognizer.swift Updates:**
    - Added platform-specific path handling for Linux
-   - On Linux: Uses `~/.local/share/SuperWhisperLite/Models`
+   - On Linux: Uses `~/.local/share/Superhoarse/Models`
    - On macOS: Uses standard Application Support directory
 
 ## Building on Linux

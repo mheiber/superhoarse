@@ -1,6 +1,6 @@
 import XCTest
 import Foundation
-@testable import SuperWhisperLite
+@testable import Superhoarse
 
 final class SpeechRecognizerTests: XCTestCase {
     var speechRecognizer: SpeechRecognizer!
@@ -21,12 +21,12 @@ final class SpeechRecognizerTests: XCTestCase {
         // Test that the model path is generated correctly
         let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, 
                                                in: .userDomainMask).first!
-            .appendingPathComponent("SuperWhisperLite/Models")
+            .appendingPathComponent("Superhoarse/Models")
         
         let expectedPath = modelsDir.appendingPathComponent("ggml-base.bin").path
         
         // Verify the path structure is correct
-        XCTAssertTrue(expectedPath.contains("SuperWhisperLite/Models"))
+        XCTAssertTrue(expectedPath.contains("Superhoarse/Models"))
         XCTAssertTrue(expectedPath.hasSuffix("ggml-base.bin"))
     }
     
@@ -87,7 +87,7 @@ final class SpeechRecognizerTests: XCTestCase {
     func testModelDirectoryCreation() {
         let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, 
                                                in: .userDomainMask).first!
-            .appendingPathComponent("SuperWhisperLite/Models")
+            .appendingPathComponent("Superhoarse/Models")
         
         // Clean up if exists
         try? FileManager.default.removeItem(at: modelsDir)

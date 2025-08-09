@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>SuperWhisperLite</string>
+    <string>Superhoarse</string>
     <key>CFBundleIdentifier</key>
-    <string>com.superwhisperlite.app</string>
+    <string>com.superhoarse.app</string>
     <key>CFBundleName</key>
-    <string>SuperWhisper Lite</string>
+    <string>Superhoarse</string>
     <key>CFBundleDisplayName</key>
-    <string>SuperWhisper Lite</string>
+    <string>Superhoarse</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>
@@ -21,11 +21,11 @@
     
     <!-- Required for microphone access -->
     <key>NSMicrophoneUsageDescription</key>
-    <string>SuperWhisper Lite needs microphone access to record and transcribe your speech.</string>
+    <string>Superhoarse needs microphone access to record and transcribe your speech.</string>
     
     <!-- Required for accessibility features (text insertion) -->
     <key>NSAppleEventsUsageDescription</key>
-    <string>SuperWhisper Lite needs to send keystrokes to insert transcribed text into the active application.</string>
+    <string>Superhoarse needs to send keystrokes to insert transcribed text into the active application.</string>
     
     <!-- Minimum macOS version -->
     <key>LSMinimumSystemVersion</key>
