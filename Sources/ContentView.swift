@@ -20,10 +20,12 @@ struct ContentView: View {
                 TranscriptionView()
                 
                 ControlsView()
+                
+                KeyboardShortcutConfigView()
             }
         }
         .padding()
-        .frame(width: 400, height: appState.hasAccessibilityPermission ? 300 : 380)
+        .frame(width: 400, height: appState.hasAccessibilityPermission ? 420 : 500)
         .background(Color(.windowBackgroundColor))
     }
 }
@@ -124,21 +126,16 @@ struct ControlsView: View {
             Spacer()
             
             Button("Clear") {
-                // Clear transcription
-            }
-            .buttonStyle(.bordered)
-            
-            Button("Settings") {
-                // Open settings
+                appState.transcriptionText = ""
             }
             .buttonStyle(.bordered)
         }
     }
 }
 
-struct SettingsView: View {
+struct KeyboardShortcutConfigView: View {
     @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
-    @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49 // Space key
+    @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
     
     private let modifierOptions = [
         (name: "⌘⇧ (Cmd+Shift)", value: 0),
@@ -156,56 +153,57 @@ struct SettingsView: View {
     ]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Keyboard Shortcut Configuration")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Modifier Keys:")
-                    .font(.headline)
-                
-                Picker("Modifier", selection: $hotKeyModifier) {
-                    ForEach(modifierOptions, id: \.value) { option in
-                        Text(option.name).tag(option.value)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Key:")
-                    .font(.headline)
-                
-                Picker("Key", selection: $hotKeyCode) {
-                    ForEach(keyOptions, id: \.code) { option in
-                        Text(option.name).tag(option.code)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-            
+        VStack(spacing: 12) {
             HStack {
-                Text("Current shortcut:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("Keyboard Shortcut")
+                    .font(.headline)
+                Spacer()
                 Text(currentShortcutString)
                     .font(.caption)
                     .fontWeight(.medium)
+                    .foregroundColor(.secondary)
             }
             
-            Spacer()
-            
-            HStack {
-                Spacer()
-                Button("Apply Changes") {
-                    NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+            HStack(spacing: 15) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Modifier:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("Modifier", selection: $hotKeyModifier) {
+                        ForEach(modifierOptions, id: \.value) { option in
+                            Text(option.name).tag(option.value)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 160)
                 }
-                .buttonStyle(.borderedProminent)
+                
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Key:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("Key", selection: $hotKeyCode) {
+                        ForEach(keyOptions, id: \.code) { option in
+                            Text(option.name).tag(option.code)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 100)
+                }
+                
+                VStack {
+                    Spacer()
+                    Button("Apply") {
+                        NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
             }
         }
         .padding()
-        .frame(width: 400, height: 200)
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
     }
     
     private var currentShortcutString: String {
