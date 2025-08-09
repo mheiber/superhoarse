@@ -21,7 +21,7 @@ class AppState: ObservableObject {
     private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppState")
     
     private init() {
-        checkAccessibilityPermissions()
+        updateAccessibilityPermission()
         setupHotKeyManager()
         setupAudioRecorder()
         setupSpeechRecognizer()
@@ -101,27 +101,41 @@ class AppState: ObservableObject {
         pasteboard.setString(text, forType: NSPasteboard.PasteboardType.string)
         logger.info("Text copied to clipboard")
         
+        // Fix: Re-check permission just-in-time before attempting to insert text.
+        updateAccessibilityPermission()
+        
         // Insert text at cursor position only if we have permission
         if hasAccessibilityPermission {
             logger.info("Inserting text at cursor...")
             let sanitizedText = sanitizeTextForInsertion(text)
             insertTextAtCursor(sanitizedText)
         } else {
-            logger.error("Accessibility permission required for text insertion")
+            logger.error("Accessibility permission denied. Text will not be inserted.")
         }
     }
     
-    private func checkAccessibilityPermissions() {
+    // Renamed and modified to be a synchronous update.
+    func updateAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
         let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
         
+        // Log bundle information for debugging
+        if let bundleId = Bundle.main.bundleIdentifier {
+            logger.info("Checking permissions for bundle ID: \(bundleId)")
+        } else {
+            logger.warning("No bundle ID found - running as unbundled executable")
+        }
+        
+        logger.info("Process name: \(ProcessInfo.processInfo.processName)")
+        logger.info("Accessibility permission status: \(trusted)")
+        
+        // Update the published property on the main thread.
         DispatchQueue.main.async {
             self.hasAccessibilityPermission = trusted
         }
         
         if !trusted {
             logger.error("Accessibility permission not granted. Text insertion will be disabled.")
-            logger.info("Please grant accessibility permission in System Preferences > Security & Privacy > Privacy > Accessibility")
         }
     }
     

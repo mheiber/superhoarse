@@ -1,17 +1,18 @@
 import SwiftUI
 import AppKit
 import Combine
+import os.log
 
+// Using Settings {} defines the app as a menu bar application.
+// This ensures a single, consistent process, fixing the accessibility permission issue.
 struct SuperWhisperLiteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
-        WindowGroup("SuperWhisper Lite") {
-            ContentView()
-                .environmentObject(AppState.shared)
+        Settings {
+            // The settings view is now managed by the AppDelegate
+            // to ensure it runs in the context of the main app process.
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
     }
 }
 
@@ -20,17 +21,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private var listeningIndicatorWindow: NSWindow?
     private var appState: AppState?
-    
+    private var cancellables = Set<AnyCancellable>()
+    private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppDelegate")
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Show in dock and menu bar
-        NSApp.setActivationPolicy(.regular)
+        // Set activation policy to .accessory to run as a menu bar app (no Dock icon).
+        NSApp.setActivationPolicy(.accessory)
+        
         setupMenuBar()
         
-        // Initialize AppState early to ensure hotkeys and recording work
-        _ = AppState.shared  // Force initialization
-        setupAppState()
+        // Initialize the shared AppState and set up listeners.
+        appState = AppState.shared
+        setupAppStateListeners()
+        
+        // Fix regression: Explicitly open settings window on launch.
+        openSettings()
+        
+        logger.info("SuperWhisperLite launched successfully as a menu bar app.")
     }
     
+    // Keep the app running even when the settings window is closed.
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool {
         return false
     }
@@ -44,67 +54,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Open Settings", action: #selector(openSettings), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Open Settings", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit SuperWhisper Lite", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
         statusItem?.menu = menu
     }
     
     @objc private func openSettings() {
         if settingsWindow == nil {
-            let settingsView = SettingsView()
-            let hostingController = NSHostingController(rootView: settingsView)
+            // The main ContentView now serves as the settings view.
+            let contentView = ContentView().environmentObject(AppState.shared)
+            let hostingController = NSHostingController(rootView: contentView)
             
             settingsWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
-                styleMask: [.titled, .closable],
+                contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
             )
-            settingsWindow?.contentViewController = hostingController
             settingsWindow?.title = "SuperWhisper Lite Settings"
+            settingsWindow?.contentViewController = hostingController
             settingsWindow?.center()
-            
-            // Ensure window is retained and prevent auto-closing
+            // Reuse the window instance instead of releasing it on close.
             settingsWindow?.isReleasedWhenClosed = false
         }
         
-        guard let window = settingsWindow else {
-            print("Failed to create settings window")
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        logger.info("Settings window opened.")
+    }
+    
+    private func setupAppStateListeners() {
+        guard let appState = appState else {
+            logger.error("AppState not initialized.")
             return
         }
         
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-    
-    private func setupAppState() {
-        // Use the shared AppState instance
-        appState = AppState.shared
-        
-        // Monitor for recording state changes
-        appState?.$showListeningIndicator
+        appState.$showListeningIndicator
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] showIndicator in
-                if showIndicator {
-                    self?.showListeningIndicator()
-                } else {
-                    self?.hideListeningIndicator()
-                }
+            .sink { [weak self] show in
+                self?.toggleListeningIndicator(show)
             }
             .store(in: &cancellables)
     }
     
-    private var cancellables = Set<AnyCancellable>()
+    private func toggleListeningIndicator(_ show: Bool) {
+        if show {
+            showListeningIndicator()
+        } else {
+            hideListeningIndicator()
+        }
+    }
     
     private func showListeningIndicator() {
         guard let appState = appState else { return }
         
         if listeningIndicatorWindow == nil {
-            let indicatorView = ListeningIndicatorView()
-                .environmentObject(appState)
-            
+            // Assuming ListeningIndicatorView exists.
+            let indicatorView = ListeningIndicatorView().environmentObject(appState)
             let hostingController = NSHostingController(rootView: indicatorView)
             
             listeningIndicatorWindow = NSWindow(
@@ -116,15 +124,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             listeningIndicatorWindow?.contentViewController = hostingController
             listeningIndicatorWindow?.isOpaque = false
-            listeningIndicatorWindow?.backgroundColor = NSColor.clear
+            listeningIndicatorWindow?.backgroundColor = .clear
             listeningIndicatorWindow?.level = .floating
             listeningIndicatorWindow?.isMovableByWindowBackground = true
             listeningIndicatorWindow?.isReleasedWhenClosed = false
             
-            // Position at top center of screen
             if let screen = NSScreen.main {
                 let screenFrame = screen.visibleFrame
-                let windowSize = listeningIndicatorWindow?.frame.size ?? CGSize(width: 400, height: 120)
+                let windowSize = listeningIndicatorWindow?.frame.size ?? .zero
                 let x = screenFrame.midX - windowSize.width / 2
                 let y = screenFrame.maxY - windowSize.height - 20
                 listeningIndicatorWindow?.setFrameOrigin(CGPoint(x: x, y: y))
@@ -132,12 +139,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         listeningIndicatorWindow?.makeKeyAndOrderFront(nil)
+        logger.info("Listening indicator shown.")
     }
     
     private func hideListeningIndicator() {
         listeningIndicatorWindow?.orderOut(nil)
+        logger.info("Listening indicator hidden.")
     }
 }
 
-// Main entry point
+
+
+// Main entry point for the SwiftUI application.
 SuperWhisperLiteApp.main()
