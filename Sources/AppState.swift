@@ -14,10 +14,20 @@ class AppState: ObservableObject {
     @Published var hasAccessibilityPermission = false
     @Published var showListeningIndicator = false
     @Published var currentAudioLevel: Float = 0.0
+    @Published var currentSpeechEngine: SpeechEngineType = .whisper
     
     private var hotKeyManager: HotKeyManager?
     var audioRecorder: AudioRecorder?
-    private var speechRecognizer: SpeechRecognizer?
+    private var whisperEngine: WhisperEngine?
+    private var parakeetEngine: ParakeetEngine?
+    private var currentEngine: SpeechRecognitionEngine? {
+        switch currentSpeechEngine {
+        case .whisper:
+            return whisperEngine
+        case .parakeet:
+            return parakeetEngine
+        }
+    }
     private var audioLevelCancellable: AnyCancellable?
     
     private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppState")
@@ -45,7 +55,15 @@ class AppState: ObservableObject {
     }
     
     private func setupSpeechRecognizer() {
-        speechRecognizer = SpeechRecognizer()
+        whisperEngine = WhisperEngine()
+        parakeetEngine = ParakeetEngine()
+        
+        // Load saved engine preference
+        if let savedEngine = UserDefaults.standard.string(forKey: "speechEngine"),
+           let engineType = SpeechEngineType(rawValue: savedEngine) {
+            currentSpeechEngine = engineType
+        }
+        
         isInitialized = true
     }
     
@@ -85,10 +103,22 @@ class AppState: ObservableObject {
             return 
         }
         
-        logger.info("Processing audio data (\(audioData.count) bytes)...")
-        speechRecognizer?.transcribe(audioData) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.handleTranscriptionResult(result)
+        logger.info("Processing audio data (\(audioData.count) bytes) using \(self.currentSpeechEngine.displayName)...")
+        currentEngine?.transcribe(audioData) { [weak self] result in
+            guard let self = self else { return }
+            
+            // If transcription failed and we're using Parakeet, fall back to Whisper
+            if result == nil && self.currentSpeechEngine == .parakeet {
+                self.logger.info("Parakeet transcription failed, falling back to Whisper...")
+                self.whisperEngine?.transcribe(audioData) { fallbackResult in
+                    DispatchQueue.main.async {
+                        self.handleTranscriptionResult(fallbackResult)
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.handleTranscriptionResult(result)
+                }
             }
         }
     }
@@ -227,6 +257,12 @@ class AppState: ObservableObject {
     
     func hideListeningIndicator() {
         showListeningIndicator = false
+    }
+    
+    func switchSpeechEngine(to engineType: SpeechEngineType) {
+        currentSpeechEngine = engineType
+        UserDefaults.standard.set(engineType.rawValue, forKey: "speechEngine")
+        logger.info("Switched speech engine to \(engineType.displayName)")
     }
     
     private func insertTextAtCursor(_ text: String) {

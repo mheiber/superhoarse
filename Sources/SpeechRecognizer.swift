@@ -2,12 +2,29 @@ import Foundation
 import CryptoKit
 import whisper
 
-class SpeechRecognizer {
+class WhisperEngine: SpeechRecognitionEngine {
     private var whisperContext: OpaquePointer?
     private let queue = DispatchQueue(label: "speech.recognition", qos: .userInitiated)
     
+    var isInitialized: Bool {
+        return whisperContext != nil
+    }
+    
+    let engineName = "Whisper"
+    
     init() {
-        setupWhisper()
+        Task {
+            try await initialize()
+        }
+    }
+    
+    func initialize() async throws {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            queue.async { [weak self] in
+                self?.initializeWhisperModel()
+                continuation.resume()
+            }
+        }
     }
     
     deinit {
@@ -16,11 +33,6 @@ class SpeechRecognizer {
         }
     }
     
-    private func setupWhisper() {
-        queue.async { [weak self] in
-            self?.initializeWhisperModel()
-        }
-    }
     
     private func initializeWhisperModel() {
         // Use the built-in base model from whisper.cpp

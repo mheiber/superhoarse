@@ -31,15 +31,22 @@ struct ContentView: View {
 }
 
 struct HeaderView: View {
+    @EnvironmentObject var appState: AppState
+    
     var body: some View {
         VStack {
             Text("Superhoarse")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Press ⌘⇧Space to record")
+            Text("Press \(appState.getCurrentShortcutString()) to record")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                
+            Text("Using \(appState.currentSpeechEngine.displayName)")
+                .font(.caption2)
+                .foregroundColor(appState.currentSpeechEngine == .parakeet ? .blue : .green)
+                .padding(.top, 2)
         }
     }
 }
@@ -134,6 +141,7 @@ struct ControlsView: View {
 }
 
 struct KeyboardShortcutConfigView: View {
+    @EnvironmentObject var appState: AppState
     @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
     @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
     
@@ -155,8 +163,38 @@ struct KeyboardShortcutConfigView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Keyboard Shortcut")
+                Text("Settings")
                     .font(.headline)
+                Spacer()
+            }
+            
+            // Speech Engine Selection
+            HStack {
+                Text("Speech Engine:")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Picker("Speech Engine", selection: $appState.currentSpeechEngine) {
+                    ForEach(SpeechEngineType.allCases, id: \.self) { engine in
+                        Text(engine.displayName).tag(engine)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 160)
+                .onChange(of: appState.currentSpeechEngine) { newEngine in
+                    appState.switchSpeechEngine(to: newEngine)
+                }
+            }
+            
+            Divider()
+            
+            // Keyboard Shortcut Section
+            HStack {
+                Text("Keyboard Shortcut")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                 Spacer()
                 Text(currentShortcutString)
                     .font(.caption)
