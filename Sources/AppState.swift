@@ -13,10 +13,12 @@ class AppState: ObservableObject {
     @Published var isInitialized = false
     @Published var hasAccessibilityPermission = false
     @Published var showListeningIndicator = false
+    @Published var currentAudioLevel: Float = 0.0
     
     private var hotKeyManager: HotKeyManager?
     var audioRecorder: AudioRecorder?
     private var speechRecognizer: SpeechRecognizer?
+    private var audioLevelCancellable: AnyCancellable?
     
     private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppState")
     
@@ -35,6 +37,11 @@ class AppState: ObservableObject {
     
     private func setupAudioRecorder() {
         audioRecorder = AudioRecorder()
+        
+        // Subscribe to audio level changes
+        audioLevelCancellable = audioRecorder?.$currentAudioLevel
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.currentAudioLevel, on: self)
     }
     
     private func setupSpeechRecognizer() {

@@ -238,7 +238,7 @@ struct ListeningIndicatorView: View {
                 .buttonStyle(PlainButtonStyle())
             }
             
-            WaveformVisualizerView(audioLevel: appState.audioRecorder?.currentAudioLevel ?? 0.0)
+            WaveformVisualizerView(audioLevel: appState.currentAudioLevel)
             
             HStack {
                 Text("Press \(appState.getCurrentShortcutString()) to stop")
@@ -276,23 +276,35 @@ struct ListeningIndicatorView: View {
 
 struct WaveformVisualizerView: View {
     let audioLevel: Float
-    @State private var waveformBars: [Float] = Array(repeating: 0.1, count: 24)
+    @State private var waveformBars: [Float] = Array(repeating: 0.02, count: 40)
     @State private var animationTimer: Timer?
+    @State private var phase: Double = 0.0
     
     var body: some View {
-        HStack(alignment: .center, spacing: 2) {
+        HStack(alignment: .center, spacing: 1) {
             ForEach(0..<waveformBars.count, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 1)
+                RoundedRectangle(cornerRadius: 2)
                     .fill(LinearGradient(
-                        gradient: Gradient(colors: [.green, .yellow, .red]),
+                        gradient: Gradient(colors: [
+                            Color(red: 1.0, green: 0.0, blue: 1.0),  // Magenta
+                            Color(red: 0.8, green: 0.0, blue: 1.0),  // Purple-pink
+                            Color(red: 0.4, green: 0.0, blue: 1.0),  // Deep purple
+                            Color(red: 0.0, green: 0.8, blue: 1.0)   // Cyan
+                        ]),
                         startPoint: .bottom,
                         endPoint: .top
                     ))
-                    .frame(width: 3, height: max(2, CGFloat(waveformBars[index]) * 40))
-                    .animation(.easeInOut(duration: 0.1), value: waveformBars[index])
+                    .frame(width: 4, height: max(3, CGFloat(waveformBars[index]) * 80))
+                    .animation(.easeOut(duration: 0.08), value: waveformBars[index])
+                    .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), radius: 2)
             }
         }
-        .frame(height: 40)
+        .frame(height: 80)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.3))
+                .shadow(color: Color(red: 0.4, green: 0.0, blue: 1.0).opacity(0.5), radius: 4)
+        )
         .onAppear {
             startWaveformAnimation()
         }
@@ -305,7 +317,7 @@ struct WaveformVisualizerView: View {
     }
     
     private func startWaveformAnimation() {
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             updateWaveform(with: audioLevel)
         }
     }
@@ -316,12 +328,21 @@ struct WaveformVisualizerView: View {
     }
     
     private func updateWaveform(with level: Float) {
-        let currentLevel = max(0.1, level)
+        phase += 0.3
+        
+        let baseLevel = max(0.02, level)
+        let scaledLevel = pow(baseLevel, 0.7)
         
         for i in 0..<waveformBars.count {
-            let baseHeight = currentLevel * (0.3 + Float.random(in: 0...0.7))
-            let variation = Float.random(in: -0.1...0.1)
-            waveformBars[i] = min(1.0, max(0.1, baseHeight + variation))
+            let position = Float(i) / Float(waveformBars.count - 1)
+            let centerDistance = abs(position - 0.5) * 2.0
+            let falloff = 1.0 - pow(centerDistance, 1.5)
+            
+            let waveOffset = sin(Double(i) * 0.8 + phase) * 0.15
+            let heightMultiplier = scaledLevel * falloff + Float(waveOffset) * scaledLevel * 0.3
+            
+            let minHeight: Float = audioLevel < 0.01 ? 0.02 : 0.1
+            waveformBars[i] = max(minHeight, min(1.0, heightMultiplier))
         }
     }
 }
