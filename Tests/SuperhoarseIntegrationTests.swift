@@ -394,6 +394,25 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         XCTAssertNotNil(appState.hasAccessibilityPermission, "Permission status should be available")
         
         // Note: We don't test requestAccessibilityPermissions() as it shows system dialogs
+        
+        // Test permission monitoring methods can be called without crashing
+        let initialPermissionState = appState.hasAccessibilityPermission
+        
+        // Test that permission monitoring can start and stop cleanly
+        appState.startPermissionMonitoring()
+        
+        // Wait briefly to ensure timer is set up
+        let expectation = XCTestExpectation(description: "Timer setup")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
+        
+        // Stop monitoring should work
+        appState.stopPermissionMonitoring()
+        
+        // Permission state should remain stable
+        XCTAssertEqual(appState.hasAccessibilityPermission, initialPermissionState, "Permission state should remain stable after monitoring")
     }
     
     // Test user workflow with multiple quick operations

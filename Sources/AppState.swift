@@ -18,6 +18,7 @@ class AppState: ObservableObject {
     @Published var currentSpeechEngine: SpeechEngineType = .whisper
     
     private var hotKeyManager: HotKeyManager?
+    private var permissionCheckTimer: Timer?
     var audioRecorder: AudioRecorder?
     private var whisperEngine: SpeechRecognitionEngine?
     private var parakeetEngine: SpeechRecognitionEngine?
@@ -32,6 +33,10 @@ class AppState: ObservableObject {
     private var audioLevelCancellable: AnyCancellable?
     
     private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppState")
+    
+    deinit {
+        permissionCheckTimer?.invalidate()
+    }
     
     private init() {
         updateAccessibilityPermission()
@@ -186,14 +191,53 @@ class AppState: ObservableObject {
             self.hasAccessibilityPermission = trusted
         }
         
-        // If still not trusted, open System Preferences directly
+        // If still not trusted, open System Preferences directly and start monitoring
         if !trusted {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                     NSWorkspace.shared.open(url)
                 }
             }
+            
+            // Start polling for permission changes
+            startPermissionMonitoring()
         }
+    }
+    
+    func startPermissionMonitoring() {
+        // Cancel any existing timer
+        permissionCheckTimer?.invalidate()
+        
+        // Check permissions every 2 seconds
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+            let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
+            
+            DispatchQueue.main.async {
+                let wasPermissionGranted = !self.hasAccessibilityPermission && trusted
+                self.hasAccessibilityPermission = trusted
+                
+                // Stop monitoring once permission is granted
+                if trusted {
+                    self.stopPermissionMonitoring()
+                    if wasPermissionGranted {
+                        self.logger.info("Accessibility permission granted - monitoring stopped")
+                    }
+                }
+            }
+        }
+        
+        // Stop monitoring after 5 minutes to prevent indefinite polling
+        DispatchQueue.main.asyncAfter(deadline: .now() + 300) {
+            self.stopPermissionMonitoring()
+        }
+    }
+    
+    func stopPermissionMonitoring() {
+        permissionCheckTimer?.invalidate()
+        permissionCheckTimer = nil
     }
     
     private func sanitizeTextForInsertion(_ text: String) -> String {
