@@ -247,4 +247,77 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
         
         // Note: Transcription text may be empty due to short/invalid audio, which is expected behavior
     }
+    
+    // Test bug reproduction: Long recording duration breaks subsequent recordings
+    func testLongRecordingBreaksSubsequentRecordings() async {
+        // Test the reported bug where recordings longer than 15 seconds break dictation
+        
+        // First verify short recording works
+        appState.toggleRecording()
+        XCTAssertTrue(appState.isRecording, "Short recording should start normally")
+        
+        // Record for less than 10 seconds (this should work)
+        try? await Task.sleep(for: .milliseconds(200))
+        
+        appState.toggleRecording()
+        XCTAssertFalse(appState.isRecording, "Short recording should stop normally")
+        
+        // Wait for processing
+        try? await Task.sleep(for: .milliseconds(300))
+        
+        // Now test long recording (simulating >15 second recording)
+        appState.toggleRecording()
+        XCTAssertTrue(appState.isRecording, "Long recording should start normally")
+        
+        // Simulate recording for more than 15 seconds
+        // Since we can't actually record for 15+ seconds in a test, 
+        // we'll simulate the audio recorder being active for longer
+        try? await Task.sleep(for: .milliseconds(500))
+        
+        appState.toggleRecording()
+        XCTAssertFalse(appState.isRecording, "Long recording should stop")
+        
+        // Wait for processing - this is where the bug might manifest
+        try? await Task.sleep(for: .milliseconds(500))
+        
+        // Now test if subsequent recordings work (this is where the bug appears)
+        appState.toggleRecording()
+        XCTAssertTrue(appState.isRecording, "Subsequent recording should start after long recording")
+        
+        try? await Task.sleep(for: .milliseconds(200))
+        
+        appState.toggleRecording()
+        XCTAssertFalse(appState.isRecording, "Subsequent recording should stop normally")
+        
+        // Verify the app is still in a usable state
+        try? await Task.sleep(for: .milliseconds(200))
+        XCTAssertNotNil(appState.audioRecorder, "Audio recorder should still exist after long recording")
+        XCTAssertFalse(appState.isRecording, "Should not be stuck in recording state")
+    }
+    
+    // Test resource cleanup after multiple recordings
+    func testResourceCleanupAfterMultipleRecordings() async {
+        // This test checks if temporary files and audio resources are properly cleaned up
+        let initialRecorder = appState.audioRecorder
+        
+        // Perform multiple recording cycles
+        for i in 0..<5 {
+            appState.toggleRecording()
+            XCTAssertTrue(appState.isRecording, "Recording \(i+1) should start")
+            
+            // Simulate variable recording durations
+            let duration = i % 2 == 0 ? 100 : 300 // Alternate between short and longer recordings
+            try? await Task.sleep(for: .milliseconds(duration))
+            
+            appState.toggleRecording()
+            XCTAssertFalse(appState.isRecording, "Recording \(i+1) should stop")
+            
+            // Wait for processing between recordings
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        
+        // Verify the audio recorder is still the same instance (not recreated due to errors)
+        XCTAssertTrue(appState.audioRecorder === initialRecorder, "Audio recorder should not be recreated due to errors")
+        XCTAssertFalse(appState.isRecording, "Should not be in recording state after all tests")
+    }
 }

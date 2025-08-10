@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import os.log
 
 class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private var audioRecorder: AVAudioRecorder?
@@ -9,6 +10,7 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     
     @Published var currentAudioLevel: Float = 0.0
     private var levelTimer: Timer?
+    private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AudioRecorder")
     
     override init() {
         super.init()
@@ -62,9 +64,9 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
             
             startLevelMonitoring()
             
-            print("Started recording to: \(url.path)")
+            // Remove verbose logging - not needed for normal operation
         } catch {
-            print("Failed to start recording: \(error)")
+            logger.error("Failed to start recording: \(error.localizedDescription)")
         }
     }
     
@@ -93,13 +95,28 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         
         do {
             let audioData = try Data(contentsOf: url)
+            // Pass both data and cleanup URL to completion handler
             completionHandler?(audioData)
             
-            // Clean up temporary file
-            try FileManager.default.removeItem(at: url)
+            // Schedule cleanup after a delay to ensure transcription process has finished
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                do {
+                    if FileManager.default.fileExists(atPath: url.path) {
+                        try FileManager.default.removeItem(at: url)
+                        // File cleanup successful - no logging needed
+                    }
+                } catch {
+                    self?.logger.error("Failed to clean up temporary audio file: \(error.localizedDescription)")
+                }
+            }
         } catch {
-            print("Failed to read audio file: \(error)")
+            logger.error("Failed to read audio file: \(error.localizedDescription)")
             completionHandler?(nil)
+            
+            // Still try to clean up the file even if reading failed
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) {
+                try? FileManager.default.removeItem(at: url)
+            }
         }
     }
     

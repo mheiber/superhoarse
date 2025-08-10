@@ -5,6 +5,10 @@ import AppKit
 import SwiftUI
 import os.log
 
+struct TimeoutError: Error {
+    let message = "Operation timed out"
+}
+
 @MainActor
 class AppState: ObservableObject {
     static let shared = AppState()
@@ -88,6 +92,13 @@ class AppState: ObservableObject {
         guard !isRecording else { return }
         
         logger.info("Starting recording...")
+        
+        // Ensure audio recorder is in a good state before starting
+        if audioRecorder == nil {
+            logger.warning("Audio recorder was nil, recreating...")
+            setupAudioRecorder()
+        }
+        
         audioRecorder?.startRecording()
         isRecording = true
         showListeningIndicator = true
@@ -105,6 +116,16 @@ class AppState: ObservableObject {
         }
         isRecording = false
         showListeningIndicator = false
+        
+        // Add timeout to ensure we don't get stuck in a recording state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 35) { [weak self] in
+            guard let self = self else { return }
+            if self.isRecording {
+                self.logger.error("Recording state stuck, forcing reset")
+                self.isRecording = false
+                self.showListeningIndicator = false
+            }
+        }
     }
     
     private func processAudio(_ audioData: Data?) async {
@@ -114,15 +135,56 @@ class AppState: ObservableObject {
         }
         
         logger.info("Processing audio data (\(audioData.count) bytes) using \(self.currentSpeechEngine.displayName)...")
-        var result = await currentEngine?.transcribe(audioData)
         
-        // If transcription failed and we're using Parakeet, fall back to Whisper
-        if result == nil && self.currentSpeechEngine == .parakeet {
-            self.logger.info("Parakeet transcription failed, falling back to Whisper...")
-            result = await self.whisperEngine?.transcribe(audioData)
+        // Add timeout and resource management for transcription
+        let transcriptionTask = Task {
+            var result = await currentEngine?.transcribe(audioData)
+            
+            // If transcription failed and we're using Parakeet, fall back to Whisper
+            if result == nil && self.currentSpeechEngine == .parakeet {
+                self.logger.info("Parakeet transcription failed, falling back to Whisper...")
+                // Ensure whisper engine is properly initialized before fallback
+                if let whisperEngine = self.whisperEngine, whisperEngine.isInitialized {
+                    result = await whisperEngine.transcribe(audioData)
+                } else {
+                    self.logger.error("Whisper engine not available for fallback")
+                }
+            }
+            
+            return result
         }
         
-        handleTranscriptionResult(result)
+        // Add timeout to prevent hung transcription from blocking subsequent recordings
+        do {
+            let result = try await withTimeout(seconds: 30) {
+                await transcriptionTask.value
+            }
+            handleTranscriptionResult(result)
+        } catch {
+            logger.error("Transcription timed out or failed: \(error)")
+            handleTranscriptionResult(nil)
+        }
+    }
+    
+    // Helper function to add timeout to async operations
+    private func withTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw TimeoutError()
+            }
+            
+            guard let result = try await group.next() else {
+                throw TimeoutError()
+            }
+            
+            group.cancelAll()
+            return result
+        }
     }
     
     private func handleTranscriptionResult(_ text: String?) {

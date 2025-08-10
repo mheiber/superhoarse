@@ -106,9 +106,7 @@ class WhisperEngine: @preconcurrency SpeechRecognitionEngine {
         let params = whisper_context_default_params()
         whisperContext = whisper_init_from_file_with_params(path, params)
         
-        if whisperContext != nil {
-            print("Whisper model loaded successfully")
-        } else {
+        if whisperContext == nil {
             print("Failed to load Whisper model")
         }
     }
@@ -122,13 +120,11 @@ class WhisperEngine: @preconcurrency SpeechRecognitionEngine {
         
         let minimumSamples = 8000
         if floatArray.count < minimumSamples {
-            print("Audio too short (\(floatArray.count) samples), skipping transcription")
             return nil
         }
         
         let rmsLevel = sqrt(floatArray.map { $0 * $0 }.reduce(0, +) / Float(floatArray.count))
         if rmsLevel < 0.01 {
-            print("Audio too quiet (RMS: \(rmsLevel)), skipping transcription")
             return nil
         }
         
