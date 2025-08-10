@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>SuperWhisperLite</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.superwhisperlite.app</string>
+    <key>CFBundleName</key>
+    <string>SuperWhisper Lite</string>
+    <key>CFBundleDisplayName</key>
+    <string>SuperWhisper Lite</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>SWLT</string>
+    
+    <!-- Required for microphone access -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>SuperWhisper Lite needs microphone access to record and transcribe your speech.</string>
+    
+    <!-- Required for accessibility features (text insertion) -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>SuperWhisper Lite needs to send keystrokes to insert transcribed text into the active application.</string>
+    
+    <!-- Minimum macOS version -->
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    
+    <!-- App category -->
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    
+    <!-- Hide from dock by default (menu bar app) -->
+    <key>LSUIElement</key>
+    <true/>
+    
+    <!-- Required app transport security -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>huggingface.co</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.2</string>
+            </dict>
+        </dict>
+    </dict>
+    
+    <!-- High resolution display support -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    
+    <!-- Prevent App Nap -->
+    <key>NSAppSleepDisabled</key>
+    <true/>
+</dict>
+</plist>

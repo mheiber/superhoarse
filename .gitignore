@@ -1,0 +1,39 @@
+# Swift Package Manager
+.build/
+Package.resolved
+
+# Xcode
+*.xcodeproj/
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+xcuserdata/
+DerivedData/
+.swiftpm/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# App bundle
+*.app/
+
+# Whisper models
+Models/
+*.bin
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Other
+*~
+.prompt.md.un~
