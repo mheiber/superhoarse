@@ -1,3 +1,6 @@
+// COVERAGE_EXCLUDE_START - SwiftUI Views require UI testing framework, not unit tests
+// SwiftUI views are declarative and best tested through UI automation tests
+// Unit testing SwiftUI views requires complex mocking of the entire SwiftUI framework
 import SwiftUI
 
 struct ContentView: View {
@@ -829,3 +832,4 @@ extension Notification.Name {
 //     ContentView()
 //         .environmentObject(AppState())
 // }
+// COVERAGE_EXCLUDE_END

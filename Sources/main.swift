@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppDelegate")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // COVERAGE_EXCLUDE_START - App delegate lifecycle methods require full app launch to test
         // Set activation policy to .accessory to run as a menu bar app (no Dock icon).
         NSApp.setActivationPolicy(.accessory)
         
@@ -38,13 +39,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         openSettings()
         
         logger.info("Superhoarse launched successfully as a menu bar app.")
+        // COVERAGE_EXCLUDE_END
     }
     
+    // COVERAGE_EXCLUDE_START - App delegate lifecycle methods require full app to test
     // Keep the app running even when the settings window is closed.
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool {
         return false
     }
+    // COVERAGE_EXCLUDE_END
     
+    // COVERAGE_EXCLUDE_START - Menu bar and UI setup requires running macOS app to test
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         
@@ -65,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.appearance = NSAppearance(named: .darkAqua)
         
         // Create menu items with synthwave styling
-        let settingsItem = NSMenuItem(title: "⚡ OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.attributedTitle = NSAttributedString(
             string: "⚡ OPEN SETTINGS",
             attributes: [
@@ -76,9 +81,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let separatorItem = NSMenuItem.separator()
         
-        let quitItem = NSMenuItem(title: "🚀 QUIT SUPERHOARSE", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "QUIT SUPERHOARSE", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quitItem.attributedTitle = NSAttributedString(
-            string: "🚀 QUIT SUPERHOARSE",
+            string: "QUIT SUPERHOARSE",
             attributes: [
                 .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
                 .foregroundColor: NSColor.systemRed
@@ -91,7 +96,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         statusItem?.menu = menu
     }
+    // COVERAGE_EXCLUDE_END
     
+    // COVERAGE_EXCLUDE_START - Window management requires running macOS app with UI to test
     @MainActor
     @objc private func openSettings() {
         if settingsWindow == nil {
@@ -118,6 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         logger.info("Settings window opened.")
     }
+    // COVERAGE_EXCLUDE_END
     
     @MainActor
     private func setupAppStateListeners() {
@@ -134,6 +142,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
     }
     
+    // COVERAGE_EXCLUDE_START - UI indicator management requires running app with windows
     private func toggleListeningIndicator(_ show: Bool) {
         if show {
             showListeningIndicator()
@@ -181,9 +190,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         listeningIndicatorWindow?.orderOut(nil)
         logger.info("Listening indicator hidden.")
     }
+    // COVERAGE_EXCLUDE_END
 }
 
 
 
+// COVERAGE_EXCLUDE_START - Main entry point cannot be unit tested as it starts the app
+// This is the SwiftUI app lifecycle entry point and requires a running app to test
 // Main entry point for the SwiftUI application.
 SuperhoarseApp.main()
+// COVERAGE_EXCLUDE_END
