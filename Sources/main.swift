@@ -61,10 +61,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.menu = menu
     }
     
+    @MainActor
     @objc private func openSettings() {
         if settingsWindow == nil {
             // The main ContentView now serves as the settings view.
-            let contentView = ContentView().environmentObject(AppState.shared)
+            let contentView = ContentView().environmentObject(appState!)
             let hostingController = NSHostingController(rootView: contentView)
             
             settingsWindow = NSWindow(
@@ -85,6 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         logger.info("Settings window opened.")
     }
     
+    @MainActor
     private func setupAppStateListeners() {
         guard let appState = appState else {
             logger.error("AppState not initialized.")

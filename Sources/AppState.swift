@@ -5,6 +5,7 @@ import AppKit
 import SwiftUI
 import os.log
 
+@MainActor
 class AppState: ObservableObject {
     static let shared = AppState()
     
@@ -18,8 +19,8 @@ class AppState: ObservableObject {
     
     private var hotKeyManager: HotKeyManager?
     var audioRecorder: AudioRecorder?
-    private var whisperEngine: WhisperEngine?
-    private var parakeetEngine: ParakeetEngine?
+    private var whisperEngine: SpeechRecognitionEngine?
+    private var parakeetEngine: SpeechRecognitionEngine?
     private var currentEngine: SpeechRecognitionEngine? {
         switch currentSpeechEngine {
         case .whisper:
@@ -36,7 +37,9 @@ class AppState: ObservableObject {
         updateAccessibilityPermission()
         setupHotKeyManager()
         setupAudioRecorder()
-        setupSpeechRecognizer()
+        Task {
+            await setupSpeechRecognizer()
+        }
     }
     
     private func setupHotKeyManager() {
@@ -54,7 +57,7 @@ class AppState: ObservableObject {
             .assign(to: \.currentAudioLevel, on: self)
     }
     
-    private func setupSpeechRecognizer() {
+    private func setupSpeechRecognizer() async {
         whisperEngine = WhisperEngine()
         parakeetEngine = ParakeetEngine()
         
@@ -91,36 +94,30 @@ class AppState: ObservableObject {
         
         logger.info("Stopping recording...")
         audioRecorder?.stopRecording { [weak self] audioData in
-            self?.processAudio(audioData)
+            Task {
+                await self?.processAudio(audioData)
+            }
         }
         isRecording = false
         showListeningIndicator = false
     }
     
-    private func processAudio(_ audioData: Data?) {
+    private func processAudio(_ audioData: Data?) async {
         guard let audioData = audioData else { 
             logger.error("No audio data received")
             return 
         }
         
         logger.info("Processing audio data (\(audioData.count) bytes) using \(self.currentSpeechEngine.displayName)...")
-        currentEngine?.transcribe(audioData) { [weak self] result in
-            guard let self = self else { return }
-            
-            // If transcription failed and we're using Parakeet, fall back to Whisper
-            if result == nil && self.currentSpeechEngine == .parakeet {
-                self.logger.info("Parakeet transcription failed, falling back to Whisper...")
-                self.whisperEngine?.transcribe(audioData) { fallbackResult in
-                    DispatchQueue.main.async {
-                        self.handleTranscriptionResult(fallbackResult)
-                    }
-                }
-            } else {
-                DispatchQueue.main.async {
-                    self.handleTranscriptionResult(result)
-                }
-            }
+        var result = await currentEngine?.transcribe(audioData)
+        
+        // If transcription failed and we're using Parakeet, fall back to Whisper
+        if result == nil && self.currentSpeechEngine == .parakeet {
+            self.logger.info("Parakeet transcription failed, falling back to Whisper...")
+            result = await self.whisperEngine?.transcribe(audioData)
         }
+        
+        handleTranscriptionResult(result)
     }
     
     private func handleTranscriptionResult(_ text: String?) {

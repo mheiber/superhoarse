@@ -1,11 +1,11 @@
 import Foundation
 
-protocol SpeechRecognitionEngine {
+@preconcurrency protocol SpeechRecognitionEngine: Sendable {
     var isInitialized: Bool { get }
     var engineName: String { get }
     
     func initialize() async throws
-    func transcribe(_ audioData: Data, completion: @escaping (String?) -> Void)
+    func transcribe(_ audioData: Data) async -> String?
 }
 
 enum SpeechEngineType: String, CaseIterable {
