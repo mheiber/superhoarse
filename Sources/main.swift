@@ -49,14 +49,45 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "mic.circle", accessibilityDescription: "Superhoarse")
-            button.toolTip = "Superhoarse"
+            // Create a custom icon with synthwave colors
+            let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .bold)
+            if let micImage = NSImage(systemSymbolName: "mic.circle.fill", accessibilityDescription: "Superhoarse")?.withSymbolConfiguration(config) {
+                // Tint the icon with a magenta color
+                micImage.isTemplate = false
+                button.image = micImage
+            }
+            button.toolTip = "🎙️ SUPERHOARSE - AI Speech Recognition"
         }
         
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Open Settings", action: #selector(openSettings), keyEquivalent: ","))
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Superhoarse", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        
+        // Style the menu with dark background
+        menu.appearance = NSAppearance(named: .darkAqua)
+        
+        // Create menu items with synthwave styling
+        let settingsItem = NSMenuItem(title: "⚡ OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.attributedTitle = NSAttributedString(
+            string: "⚡ OPEN SETTINGS",
+            attributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
+                .foregroundColor: NSColor.systemPurple
+            ]
+        )
+        
+        let separatorItem = NSMenuItem.separator()
+        
+        let quitItem = NSMenuItem(title: "🚀 QUIT SUPERHOARSE", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.attributedTitle = NSAttributedString(
+            string: "🚀 QUIT SUPERHOARSE",
+            attributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
+                .foregroundColor: NSColor.systemRed
+            ]
+        )
+        
+        menu.addItem(settingsItem)
+        menu.addItem(separatorItem)
+        menu.addItem(quitItem)
         
         statusItem?.menu = menu
     }
@@ -69,11 +100,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let hostingController = NSHostingController(rootView: contentView)
             
             settingsWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+                contentRect: NSRect(x: 0, y: 0, width: 700, height: 700),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
             )
+            settingsWindow?.minSize = NSSize(width: 600, height: 500)
+            settingsWindow?.maxSize = NSSize(width: 1000, height: 1200)
             settingsWindow?.title = "Superhoarse Settings"
             settingsWindow?.contentViewController = hostingController
             settingsWindow?.center()
