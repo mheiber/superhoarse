@@ -113,10 +113,10 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         XCTAssertNotNil(initialEngine, "App should have a default speech engine")
         
         // Test that engines are properly initialized by checking engine names
-        XCTAssertTrue([SpeechEngineType.whisper, SpeechEngineType.parakeet].contains(initialEngine))
+        XCTAssertEqual(initialEngine, SpeechEngineType.parakeet, "Should always use parakeet engine")
         
-        // User switches to the other engine
-        let newEngine: SpeechEngineType = (initialEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let newEngine: SpeechEngineType = .parakeet
         appState.switchSpeechEngine(to: newEngine)
         
         XCTAssertEqual(appState.currentSpeechEngine, newEngine, "Engine should switch when user requests")
@@ -254,7 +254,8 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         let initialEngine = appState.currentSpeechEngine
         
         // Test switching to verify engines are properly initialized
-        let alternateEngine: SpeechEngineType = (initialEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let alternateEngine: SpeechEngineType = .parakeet
         appState.switchSpeechEngine(to: alternateEngine)
         
         // Give time for engine to initialize if needed
@@ -267,16 +268,15 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         XCTAssertEqual(appState.currentSpeechEngine, initialEngine, "Should be able to switch back")
         
         // Both engines should be available for user
-        let whisperAvailable = SpeechEngineType.whisper
         let parakeetAvailable = SpeechEngineType.parakeet
-        XCTAssertNotNil(whisperAvailable, "Whisper engine should be available")
         XCTAssertNotNil(parakeetAvailable, "Parakeet engine should be available")
     }
     
     // Test user preferences persistence
     func testUserPreferencesPersistence() {
         let initialEngine = appState.currentSpeechEngine
-        let newEngine: SpeechEngineType = (initialEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let newEngine: SpeechEngineType = .parakeet
         
         // User changes engine preference
         appState.switchSpeechEngine(to: newEngine)
@@ -335,7 +335,7 @@ final class SuperhoarseIntegrationTests: XCTestCase {
     // Test user workflow when engines need initialization
     func testUserWorkflowWithEngineInitialization() async {
         // User tries both speech engines to ensure they initialize properly
-        let engines: [SpeechEngineType] = [.whisper, .parakeet]
+        let engines: [SpeechEngineType] = [.parakeet]
         
         for engine in engines {
             appState.switchSpeechEngine(to: engine)
@@ -358,7 +358,8 @@ final class SuperhoarseIntegrationTests: XCTestCase {
     func testUserWorkflowStatePersistence() async {
         // User changes settings that should persist
         let originalEngine = appState.currentSpeechEngine
-        let newEngine: SpeechEngineType = (originalEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let newEngine: SpeechEngineType = .parakeet
         
         // User switches engine
         appState.switchSpeechEngine(to: newEngine)
@@ -422,7 +423,7 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         
         for i in 0..<operations {
             // User switches engine
-            let engine: SpeechEngineType = (i % 2 == 0) ? .whisper : .parakeet
+            let engine: SpeechEngineType = .parakeet
             appState.switchSpeechEngine(to: engine)
             
             // User does quick recording
@@ -485,7 +486,7 @@ final class SuperhoarseIntegrationTests: XCTestCase {
     // Test user workflow when speech engines need to initialize from scratch
     func testUserWorkflowEngineInitialization() async {
         // Test that both engines can be properly initialized for user
-        let engines: [SpeechEngineType] = [.whisper, .parakeet]
+        let engines: [SpeechEngineType] = [.parakeet]
         
         for engine in engines {
             // User switches to engine (may need initialization)

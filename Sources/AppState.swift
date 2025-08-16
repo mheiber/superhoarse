@@ -19,24 +19,18 @@ class AppState: ObservableObject {
     @Published var hasAccessibilityPermission = false
     @Published var showListeningIndicator = false
     @Published var currentAudioLevel: Float = 0.0
-    @Published var currentSpeechEngine: SpeechEngineType = .whisper
+    @Published var currentSpeechEngine: SpeechEngineType = .parakeet
     
     private var hotKeyManager: HotKeyManager?
     private var permissionCheckTimer: Timer?
     var audioRecorder: AudioRecorder?
-    private var whisperEngine: SpeechRecognitionEngine?
     private var parakeetEngine: SpeechRecognitionEngine?
     private var currentEngine: SpeechRecognitionEngine? {
-        switch currentSpeechEngine {
-        case .whisper:
-            return whisperEngine
-        case .parakeet:
-            return parakeetEngine
-        }
+        return parakeetEngine
     }
     private var audioLevelCancellable: AnyCancellable?
     
-    private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppState")
+    private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppState")
     
     deinit {
         permissionCheckTimer?.invalidate()
@@ -67,15 +61,8 @@ class AppState: ObservableObject {
     }
     
     private func setupSpeechRecognizer() async {
-        whisperEngine = WhisperEngine()
         parakeetEngine = ParakeetEngine()
-        
-        // Load saved engine preference
-        if let savedEngine = UserDefaults.standard.string(forKey: "speechEngine"),
-           let engineType = SpeechEngineType(rawValue: savedEngine) {
-            currentSpeechEngine = engineType
-        }
-        
+        currentSpeechEngine = .parakeet
         isInitialized = true
     }
     
@@ -140,16 +127,6 @@ class AppState: ObservableObject {
         let transcriptionTask = Task {
             var result = await currentEngine?.transcribe(audioData)
             
-            // If transcription failed and we're using Parakeet, fall back to Whisper
-            if result == nil && self.currentSpeechEngine == .parakeet {
-                self.logger.info("Parakeet transcription failed, falling back to Whisper...")
-                // Ensure whisper engine is properly initialized before fallback
-                if let whisperEngine = self.whisperEngine, whisperEngine.isInitialized {
-                    result = await whisperEngine.transcribe(audioData)
-                } else {
-                    self.logger.error("Whisper engine not available for fallback")
-                }
-            }
             
             return result
         }

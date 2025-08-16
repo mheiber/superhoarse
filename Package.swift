@@ -13,14 +13,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/ggerganov/whisper.spm.git", exact: "1.5.4"),
         .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.2.0")
     ],
     targets: [
         .executableTarget(
             name: "Superhoarse",
             dependencies: [
-                .product(name: "whisper", package: "whisper.spm"),
                 .product(name: "FluidAudio", package: "FluidAudio")
             ],
             path: "Sources"

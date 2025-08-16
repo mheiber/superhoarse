@@ -60,7 +60,8 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
     // Test user workflow: User switches speech engines and sees results
     func testUserSwitchesSpeechEnginesAndSeesResults() {
         let originalEngine = appState.currentSpeechEngine
-        let alternateEngine: SpeechEngineType = (originalEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let alternateEngine: SpeechEngineType = .parakeet
         
         // User selects different speech engine from menu
         appState.switchSpeechEngine(to: alternateEngine)
@@ -71,7 +72,7 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
         // User can see engine display name for UI
         let engineDisplayName = alternateEngine.displayName
         XCTAssertFalse(engineDisplayName.isEmpty, "User should see meaningful engine name")
-        XCTAssertTrue(alternateEngine.displayName == "Whisper (Default)" || alternateEngine.displayName == "Parakeet (Faster)", "Engine name should be recognizable")
+        XCTAssertEqual(alternateEngine.displayName, "Parakeet", "Engine name should be recognizable")
         
         // User does a test recording with new engine
         appState.toggleRecording()
@@ -199,7 +200,8 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
     // Test user workflow: User's preferences persist across sessions
     func testUserPreferencesPersistAcrossSessions() async {
         let originalEngine = appState.currentSpeechEngine
-        let newEngine: SpeechEngineType = (originalEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let newEngine: SpeechEngineType = .parakeet
         
         // User changes engine preference (simulating menu selection)
         appState.switchSpeechEngine(to: newEngine)

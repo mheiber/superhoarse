@@ -22,7 +22,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var listeningIndicatorWindow: NSWindow?
     private var appState: AppState?
     private var cancellables = Set<AnyCancellable>()
-    private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AppDelegate")
+    private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppDelegate")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // COVERAGE_EXCLUDE_START - App delegate lifecycle methods require full app launch to test

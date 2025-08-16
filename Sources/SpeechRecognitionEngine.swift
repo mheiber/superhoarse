@@ -9,15 +9,12 @@ import Foundation
 }
 
 enum SpeechEngineType: String, CaseIterable {
-    case whisper = "whisper"
     case parakeet = "parakeet"
     
     var displayName: String {
         switch self {
-        case .whisper:
-            return "Whisper (Default)"
         case .parakeet:
-            return "Parakeet (Faster)"
+            return "Parakeet"
         }
     }
 }

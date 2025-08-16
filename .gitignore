@@ -33,4 +33,6 @@ Superhoarse.app/
 *.app
 
 # Downloaded models
-Models/
+Models/swift-6.0.2-RELEASE-ubuntu24.04-aarch64 swift-6.0.2-ubuntu24.04-aarch64.tar.gz
+swift-6.0.2-RELEASE-ubuntu24.04-aarch64 swift-6.0.2-ubuntu24.04-aarch64.tar.gz
+swift-6.0.2-RELEASE-ubuntu24.04-aarch64/

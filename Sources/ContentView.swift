@@ -53,7 +53,7 @@ struct InitializingView: View {
                 .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 1.0, green: 0.0, blue: 1.0)))
                 .scaleEffect(1.5)
             
-            Text("Initializing Whisper...")
+            Text("Initializing Parakeet...")
                 .font(.title3)
                 .fontWeight(.medium)
                 .foregroundColor(.white.opacity(0.9))
@@ -137,9 +137,7 @@ struct HeaderView: View {
             // Engine status
             Text("ENGINE: \(appState.currentSpeechEngine.displayName.uppercased())")
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundColor(appState.currentSpeechEngine == .parakeet ? 
-                    Color(red: 0.8, green: 0.0, blue: 1.0) : 
-                    Color(red: 0.0, green: 1.0, blue: 0.5))
+                .foregroundColor(Color(red: 0.8, green: 0.0, blue: 1.0))
                 .padding(.top, 2)
         }
         .padding(.vertical, 12)
@@ -393,9 +391,7 @@ struct KeyboardShortcutConfigView: View {
                     
                     Text("ENGINE: \(appState.currentSpeechEngine.displayName.uppercased())")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(appState.currentSpeechEngine == .parakeet ? 
-                            Color(red: 0.8, green: 0.0, blue: 1.0) : 
-                            Color(red: 0.0, green: 1.0, blue: 0.5))
+                        .foregroundColor(Color(red: 0.8, green: 0.0, blue: 1.0))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(
@@ -403,9 +399,7 @@ struct KeyboardShortcutConfigView: View {
                                 .fill(Color.black.opacity(0.4))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(appState.currentSpeechEngine == .parakeet ? 
-                                            Color(red: 0.8, green: 0.0, blue: 1.0).opacity(0.6) : 
-                                            Color(red: 0.0, green: 1.0, blue: 0.5).opacity(0.6), lineWidth: 1)
+                                        .stroke(Color(red: 0.8, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
                                 )
                         )
                 }

@@ -10,7 +10,7 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     
     @Published var currentAudioLevel: Float = 0.0
     private var levelTimer: Timer?
-    private let logger = Logger(subsystem: "com.superwhisper.lite", category: "AudioRecorder")
+    private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AudioRecorder")
     
     override init() {
         super.init()
@@ -48,7 +48,7 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatLinearPCM),
-            AVSampleRateKey: 16000.0,  // Whisper prefers 16kHz
+            AVSampleRateKey: 16000.0,  // Standard sample rate for speech recognition
             AVNumberOfChannelsKey: 1,   // Mono
             AVLinearPCMBitDepthKey: 16,
             AVLinearPCMIsBigEndianKey: false,

@@ -74,22 +74,21 @@ final class SuperhoarseUITests: XCTestCase {
         XCTAssertNotNil(initialEngine, "User should see current engine")
         
         // Test the actual display names that appear in the UI text
-        let whisperDisplayName = SpeechEngineType.whisper.displayName
         let parakeetDisplayName = SpeechEngineType.parakeet.displayName
         
-        XCTAssertEqual(whisperDisplayName, "Whisper (Default)", "User should see 'Whisper (Default)' as engine name")
-        XCTAssertEqual(parakeetDisplayName, "Parakeet (Faster)", "User should see 'Parakeet (Faster)' as engine name")
+        XCTAssertEqual(parakeetDisplayName, "Parakeet", "User should see 'Parakeet' as engine name")
         
         // Test that current engine name is displayed to user
         let currentEngineName = appState.currentSpeechEngine.displayName
-        XCTAssertTrue(["Whisper (Default)", "Parakeet (Faster)"].contains(currentEngineName), "Current engine name should be visible to user")
+        XCTAssertTrue(["Parakeet"].contains(currentEngineName), "Current engine name should be visible to user")
         
         // Test the uppercased version that appears in HeaderView and KeyboardShortcutConfigView
         let currentEngineUppercase = appState.currentSpeechEngine.displayName.uppercased()
-        XCTAssertTrue(["WHISPER (DEFAULT)", "PARAKEET (FASTER)"].contains(currentEngineUppercase), "User should see uppercased engine name in UI")
+        XCTAssertTrue(["PARAKEET"].contains(currentEngineUppercase), "User should see uppercased engine name in UI")
         
         // User switches engines and sees the new name
-        let alternateEngine: SpeechEngineType = (initialEngine == .whisper) ? .parakeet : .whisper
+        // Only parakeet engine is available now
+        let alternateEngine: SpeechEngineType = .parakeet
         appState.switchSpeechEngine(to: alternateEngine)
         
         let newEngineName = appState.currentSpeechEngine.displayName
@@ -200,8 +199,8 @@ final class SuperhoarseUITests: XCTestCase {
         XCTAssertEqual(appSubtitleText, "AI-POWERED SPEECH RECOGNITION", "User should see app subtitle")
         
         // Test initialization text from InitializingView
-        let initializingText = "Initializing Whisper..."
-        XCTAssertEqual(initializingText, "Initializing Whisper...", "User should see initialization message")
+        let initializingText = "Initializing Parakeet..."
+        XCTAssertEqual(initializingText, "Initializing Parakeet...", "User should see initialization message")
         
         // User can hide indicator manually
         appState.hideListeningIndicator()

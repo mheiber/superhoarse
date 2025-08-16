@@ -1,11 +1,11 @@
 # Superhoarse
 
-A lightweight, privacy-focused voice-to-text app for macOS inspired by SuperWhisper. Built with Swift and powered by local AI models for completely offline transcription.
+A lightweight, privacy-focused voice-to-text app for macOS. Built with Swift and powered by the Parakeet engine for fast, local speech recognition.
 
 ## Features
 
 - **🎤 Global Hotkey Recording** - Press `⌘⇧Space` to start/stop recording from anywhere
-- **🤖 Local AI Processing** - Uses OpenAI's Whisper model running entirely on your Mac
+- **🤖 Local AI Processing** - Uses Parakeet engine running entirely on your Mac
 - **🔒 Privacy First** - No data leaves your device, all processing is local
 - **⚡ Fast & Lightweight** - Optimized for Apple Silicon Macs
 - **📋 Smart Text Insertion** - Automatically inserts transcribed text where your cursor is
@@ -77,7 +77,7 @@ Superhoarse is built with simplicity and performance in mind:
         │ Audio Recorder  │    │ Speech         │
         │                 │    │ Recognizer     │
         │ - AVFoundation  │    │                │
-        │ - 16kHz PCM     │    │ - whisper.cpp  │
+        │ - 16kHz PCM     │    │ - Parakeet     │
         │ - Temp files    │    │ - Local models │
         └─────────────────┘    └────────────────┘
 ```
@@ -86,10 +86,10 @@ Superhoarse is built with simplicity and performance in mind:
 
 ### Core Dependencies
 
-- **whisper.spm** (`~1.5.4`) - Swift Package Manager wrapper for whisper.cpp
-  - *Why chosen*: Most efficient C++ implementation of OpenAI's Whisper model
-  - *Alternatives considered*: Core ML Whisper (larger), SpeechRecognizer (cloud-based)
-  - *Benefits*: Runs entirely offline, optimized for Apple Silicon, smaller memory footprint
+- **FluidAudio** (`~0.2.0`) - High-performance audio processing for speech recognition
+  - *Why chosen*: Optimized Swift implementation for real-time audio processing
+  - *Alternatives considered*: Built-in SpeechRecognizer (cloud-based), Core ML models (larger)
+  - *Benefits*: Runs entirely offline, optimized for Apple Silicon, minimal latency
 
 ### System Frameworks
 
@@ -105,12 +105,12 @@ Superhoarse is built with simplicity and performance in mind:
   - *Why chosen*: Only way to register system-wide keyboard shortcuts on macOS
   - *Alternative*: None for global hotkeys
 
-### Model Selection
+### Engine Selection
 
-- **Whisper Base Model** (74MB) - Balanced speed/accuracy for MVP
-  - *Why chosen*: Good accuracy while maintaining fast transcription on Apple Silicon
-  - *Alternatives*: Tiny (faster, less accurate), Small (slower, more accurate)
-  - *Trade-offs*: Base model provides best balance for real-time usage
+- **Parakeet Engine** - Lightweight, fast speech recognition
+  - *Why chosen*: Optimized for real-time transcription with low latency
+  - *Alternatives*: Cloud-based services (privacy concerns), larger models (slower)
+  - *Trade-offs*: Parakeet provides excellent speed while maintaining good accuracy
 
 ## Development
 
@@ -129,20 +129,20 @@ make setup
 
 - **Microphone Access** - Required to record audio for transcription
 - **Accessibility Access** - Required to insert text at cursor position
-- **Network Access** - Only used once to download the Whisper model (~74MB)
+- **Network Access** - Not required, Parakeet runs entirely offline
 
 ## Performance
 
-- **Cold Start**: ~2-3 seconds (model loading)
+- **Cold Start**: <1 second (engine initialization)
 - **Recording**: Real-time, minimal CPU usage
 - **Transcription**: ~0.5-2x real-time speed (depends on Mac model)
 - **Memory Usage**: ~100-200MB (including model)
-- **Storage**: ~74MB (Whisper base model)
+- **Storage**: <10MB (Parakeet engine)
 
 ## Privacy & Security
 
 - ✅ **No telemetry or analytics**
-- ✅ **No network requests after initial model download**
+- ✅ **No network requests - completely offline**
 - ✅ **All processing happens locally on your Mac**
 - ✅ **Audio recordings are temporary and deleted immediately**
 - ✅ **No user data is stored or transmitted**
@@ -152,7 +152,7 @@ make setup
 - **macOS only** - Built specifically for Apple's ecosystem
 - **English only** - MVP focuses on English transcription (easily expandable)
 - **Apple Silicon optimized** - Will work on Intel Macs but slower
-- **Base model accuracy** - Good for general use, not specialized terminology
+- **General purpose accuracy** - Optimized for everyday speech, not specialized terminology
 
 ## Roadmap
 
@@ -179,5 +179,5 @@ MIT License - see LICENSE file for details
 ## Credits
 
 - Inspired by [SuperWhisper](https://superwhisper.com/) by Neil Chudleigh
-- Built with [whisper.cpp](https://github.com/ggerganov/whisper.cpp) by Georgi Gerganov
-- Uses OpenAI's [Whisper](https://github.com/openai/whisper) models
+- Built with FluidAudio for high-performance audio processing
+- Uses Parakeet engine for fast, local speech recognition
