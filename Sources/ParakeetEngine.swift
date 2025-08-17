@@ -25,8 +25,21 @@ class ParakeetEngine: SpeechRecognitionEngine {
     func initialize() async throws {
         logger.info("Starting ParakeetEngine initialization...")
         do {
-            let config = ASRConfig()
-            logger.info("Created ASRConfig")
+            // Optimized configuration for short audio transcription
+            let tdtConfig = TdtConfig(
+                durations: [0, 1, 2, 3, 4, 5],  // Extended duration range for flexibility
+                includeTokenDuration: true,
+                maxSymbolsPerStep: 5             // Prevent decoder from getting stuck on blanks
+            )
+            
+            let config = ASRConfig(
+                maxSymbolsPerFrame: 5,           // Increased from default 3 for aggressive decoding
+                enableDebug: true,               // Enable for troubleshooting short audio issues
+                realtimeMode: true,              // Better for short utterances
+                chunkSizeMs: 1000,               // Smaller chunks (1s) for short audio
+                tdtConfig: tdtConfig
+            )
+            logger.info("Created optimized ASRConfig for short audio transcription")
             let manager = AsrManager(config: config)
             logger.info("Created AsrManager")
             
@@ -68,22 +81,12 @@ class ParakeetEngine: SpeechRecognitionEngine {
             return nil
         }
         
-        // Skip very short recordings (less than 0.2 seconds at 16kHz)
-        let minimumSamples = 3200  // 0.2 seconds at 16kHz
+        // FluidAudio requires minimum 1 second of audio (16000 samples at 16kHz)
+        let minimumSamples = 16000  // 1 second at 16kHz (FluidAudio requirement)
         if floatArray.count < minimumSamples {
             let durationSeconds = Double(floatArray.count) / 16000.0
-            logger.info("Transcription skipped: Audio too short (\(String(format: "%.2f", durationSeconds)) seconds, minimum 0.2 seconds required)")
+            logger.info("Transcription skipped: Audio too short (\(String(format: "%.2f", durationSeconds)) seconds, minimum 1.0 seconds required by FluidAudio)")
             return nil
-        }
-        
-        // For short recordings (less than 3 seconds), add padding to help the engine
-        var processedArray = floatArray
-        let targetMinimumSamples = 48000  // 3 seconds at 16kHz
-        if floatArray.count < targetMinimumSamples {
-            let paddingNeeded = targetMinimumSamples - floatArray.count
-            let silentPadding = Array(repeating: Float(0.0), count: paddingNeeded)
-            processedArray = floatArray + silentPadding
-            logger.info("Added \(paddingNeeded) samples of silent padding for short recording")
         }
         
         // Check for mostly silent audio
@@ -95,7 +98,7 @@ class ParakeetEngine: SpeechRecognitionEngine {
 //        }
         
         do {
-            let result = try await manager.transcribe(processedArray)
+            let result = try await manager.transcribe(floatArray)
             let finalResult = result.text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             if finalResult.isEmpty {
                 logger.info("Transcription result empty: Engine returned whitespace-only or empty text")
