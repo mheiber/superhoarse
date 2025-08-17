@@ -37,10 +37,12 @@ class AppState: ObservableObject {
     }
     
     private init() {
+        logger.info("AppState initializing...")
         updateAccessibilityPermission()
         setupHotKeyManager()
         setupAudioRecorder()
         Task {
+            logger.info("Starting speech recognizer setup task...")
             await setupSpeechRecognizer()
         }
     }
@@ -61,9 +63,20 @@ class AppState: ObservableObject {
     }
     
     private func setupSpeechRecognizer() async {
-        parakeetEngine = ParakeetEngine()
-        currentSpeechEngine = .parakeet
-        isInitialized = true
+        logger.info("Setting up speech recognizer...")
+        let engine = ParakeetEngine()
+        do {
+            logger.info("Calling engine.initialize()...")
+            try await engine.initialize()
+            logger.info("Engine initialization successful, setting up app state...")
+            parakeetEngine = engine
+            currentSpeechEngine = .parakeet
+            isInitialized = true
+            logger.info("Speech recognizer setup completed successfully")
+        } catch {
+            logger.error("Failed to initialize speech engine: \(error)")
+            isInitialized = false
+        }
     }
     
     func toggleRecording() {
@@ -117,17 +130,25 @@ class AppState: ObservableObject {
     
     private func processAudio(_ audioData: Data?) async {
         guard let audioData = audioData else { 
-            logger.error("No audio data received")
+            logger.error("Transcription failed: No audio data received from recording")
             return 
         }
         
         logger.info("Processing audio data (\(audioData.count) bytes) using \(self.currentSpeechEngine.displayName)...")
         
+        // Check if engine is properly initialized
+        guard let engine = currentEngine else {
+            logger.error("Transcription failed: No current engine available")
+            return
+        }
+        
+        if let parakeetEngine = engine as? ParakeetEngine {
+            logger.info("Using ParakeetEngine, isInitialized: \(parakeetEngine.isInitialized)")
+        }
+        
         // Add timeout and resource management for transcription
         let transcriptionTask = Task {
-            var result = await currentEngine?.transcribe(audioData)
-            
-            
+            let result = await currentEngine?.transcribe(audioData)
             return result
         }
         
@@ -138,7 +159,11 @@ class AppState: ObservableObject {
             }
             handleTranscriptionResult(result)
         } catch {
-            logger.error("Transcription timed out or failed: \(error)")
+            if error is TimeoutError {
+                logger.error("Transcription failed: Operation timed out after 30 seconds")
+            } else {
+                logger.error("Transcription failed: \(error.localizedDescription)")
+            }
             handleTranscriptionResult(nil)
         }
     }
@@ -166,7 +191,11 @@ class AppState: ObservableObject {
     
     private func handleTranscriptionResult(_ text: String?) {
         guard let text = text, !text.isEmpty else { 
-            logger.error("No transcription result received")
+            if text == nil {
+                logger.error("Transcription failed: Engine returned nil result")
+            } else {
+                logger.error("Transcription failed: Engine returned empty string")
+            }
             return 
         }
         
