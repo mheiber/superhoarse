@@ -25,20 +25,8 @@ class ParakeetEngine: SpeechRecognitionEngine {
     func initialize() async throws {
         logger.info("Starting ParakeetEngine initialization...")
         do {
-            // Optimized configuration for short audio transcription
-            let tdtConfig = TdtConfig(
-                durations: [0, 1, 2, 3, 4, 5],  // Extended duration range for flexibility
-                includeTokenDuration: true,
-                maxSymbolsPerStep: 5             // Prevent decoder from getting stuck on blanks
-            )
-            
-            let config = ASRConfig(
-                maxSymbolsPerFrame: 5,           // Increased from default 3 for aggressive decoding
-                enableDebug: true,               // Enable for troubleshooting short audio issues
-                realtimeMode: true,              // Better for short utterances
-                chunkSizeMs: 1000,               // Smaller chunks (1s) for short audio
-                tdtConfig: tdtConfig
-            )
+            // Use default configuration with debug enabled for troubleshooting
+            let config = ASRConfig(enableDebug: true)
             logger.info("Created optimized ASRConfig for short audio transcription")
             let manager = AsrManager(config: config)
             logger.info("Created AsrManager")
@@ -55,6 +43,10 @@ class ParakeetEngine: SpeechRecognitionEngine {
             guard self.asrManager != nil else {
                 throw ParakeetEngineError.initializationFailed("AsrManager creation failed")
             }
+            
+            // Reset decoder state to ensure clean initialization
+            try await manager.resetDecoderState(for: .microphone)
+            logger.info("Reset decoder state for clean initialization")
             
             logger.info("ParakeetEngine initialization completed successfully")
         } catch {
@@ -76,6 +68,14 @@ class ParakeetEngine: SpeechRecognitionEngine {
         let floatArray = convertAudioDataToFloatArray(audioData)
         logger.info("Converted to float array with \(floatArray.count) samples")
         
+        // Reset decoder state before each transcription to prevent state corruption
+        do {
+            try await manager.resetDecoderState(for: .microphone)
+            logger.debug("Reset decoder state before transcription")
+        } catch {
+            logger.warning("Failed to reset decoder state: \(error), continuing with existing state")
+        }
+        
         guard !floatArray.isEmpty else {
             logger.error("Transcription failed: Empty audio data after conversion to float array")
             return nil
@@ -85,8 +85,8 @@ class ParakeetEngine: SpeechRecognitionEngine {
         let minimumSamples = 16000  // 1 second at 16kHz (FluidAudio requirement)
         if floatArray.count < minimumSamples {
             let durationSeconds = Double(floatArray.count) / 16000.0
-            logger.info("Transcription skipped: Audio too short (\(String(format: "%.2f", durationSeconds)) seconds, minimum 1.0 seconds required by FluidAudio)")
-            return nil
+            logger.info("Audio shorter than minimum (\(String(format: "%.2f", durationSeconds))s), but attempting transcription with padding")
+            // Don't return nil - let FluidAudio handle the padding and try to transcribe anyway
         }
         
         // Check for mostly silent audio
@@ -98,12 +98,18 @@ class ParakeetEngine: SpeechRecognitionEngine {
 //        }
         
         do {
+            logger.debug("Starting transcription call to FluidAudio")
             let result = try await manager.transcribe(floatArray)
+            logger.debug("FluidAudio transcription completed - confidence: \(result.confidence), duration: \(result.duration)")
+            
             let finalResult = result.text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             if finalResult.isEmpty {
-                logger.info("Transcription result empty: Engine returned whitespace-only or empty text")
+                let durationSeconds = Double(floatArray.count) / 16000.0
+                logger.info("⚠️ Empty transcription for \(String(format: "%.1f", durationSeconds))s audio (confidence: \(result.confidence), processing time: \(result.processingTime))")
                 return nil
             }
+            
+            logger.info("✅ Successful transcription: '\(finalResult)' (confidence: \(result.confidence))")
             return finalResult
         } catch {
             logger.error("Transcription failed: Parakeet engine error - \(error.localizedDescription)")
