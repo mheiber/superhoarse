@@ -117,15 +117,6 @@ class AppState: ObservableObject {
         isRecording = false
         showListeningIndicator = false
         
-        // Add timeout to ensure we don't get stuck in a recording state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 35) { [weak self] in
-            guard let self = self else { return }
-            if self.isRecording {
-                self.logger.error("Recording state stuck, forcing reset")
-                self.isRecording = false
-                self.showListeningIndicator = false
-            }
-        }
     }
     
     private func processAudio(_ audioData: Data?) async {
