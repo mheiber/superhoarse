@@ -8,7 +8,7 @@ enum ParakeetEngineError: Error {
 }
 
 @MainActor
-class ParakeetEngine: @preconcurrency SpeechRecognitionEngine {
+class ParakeetEngine: SpeechRecognitionEngine {
     private var asrManager: AsrManager?
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "ParakeetEngine")
     
@@ -68,12 +68,22 @@ class ParakeetEngine: @preconcurrency SpeechRecognitionEngine {
             return nil
         }
         
-        // Skip very short recordings (less than 0.5 seconds at 16kHz)
-        let minimumSamples = 8000  // 0.5 seconds at 16kHz
+        // Skip very short recordings (less than 0.2 seconds at 16kHz)
+        let minimumSamples = 3200  // 0.2 seconds at 16kHz
         if floatArray.count < minimumSamples {
             let durationSeconds = Double(floatArray.count) / 16000.0
-            logger.info("Transcription skipped: Audio too short (\(String(format: "%.2f", durationSeconds)) seconds, minimum 0.5 seconds required)")
+            logger.info("Transcription skipped: Audio too short (\(String(format: "%.2f", durationSeconds)) seconds, minimum 0.2 seconds required)")
             return nil
+        }
+        
+        // For short recordings (less than 3 seconds), add padding to help the engine
+        var processedArray = floatArray
+        let targetMinimumSamples = 48000  // 3 seconds at 16kHz
+        if floatArray.count < targetMinimumSamples {
+            let paddingNeeded = targetMinimumSamples - floatArray.count
+            let silentPadding = Array(repeating: Float(0.0), count: paddingNeeded)
+            processedArray = floatArray + silentPadding
+            logger.info("Added \(paddingNeeded) samples of silent padding for short recording")
         }
         
         // Check for mostly silent audio
@@ -85,7 +95,7 @@ class ParakeetEngine: @preconcurrency SpeechRecognitionEngine {
 //        }
         
         do {
-            let result = try await manager.transcribe(floatArray)
+            let result = try await manager.transcribe(processedArray)
             let finalResult = result.text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             if finalResult.isEmpty {
                 logger.info("Transcription result empty: Engine returned whitespace-only or empty text")
