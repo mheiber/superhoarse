@@ -373,8 +373,15 @@ class AppState: ObservableObject {
         
         logger.info("About to insert text: '\(text)'")
         
+        // Verify there's a focused application that can receive text
+        guard let frontmostApp = NSWorkspace.shared.frontmostApplication else {
+            logger.error("No frontmost application found")
+            return
+        }
+        logger.info("Inserting text into application: \(frontmostApp.localizedName ?? "Unknown")")
+        
         // Create keyboard event for text insertion
-        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true) else {
+        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(0), keyDown: true) else {
             logger.error("Failed to create CGEvent")
             return
         }
@@ -382,15 +389,24 @@ class AppState: ObservableObject {
         let unicodeString = Array(text.utf16)
         event.keyboardSetUnicodeString(stringLength: unicodeString.count, unicodeString: unicodeString)
         
-        // Post to the currently focused application (whatever is active right now)
+        // Set event flags to ensure it's treated as a regular key event
+        event.flags = []
+        
+        // Post to the currently focused application
         event.post(tap: .cghidEventTap)
         logger.info("Text insertion event posted to focused application")
         
-        // Post key-up event
-        if let upEvent = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) {
+        // Add small delay before posting key-up event (some apps need this)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
+            guard let upEvent = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(0), keyDown: false) else {
+                self?.logger.error("Failed to create key-up CGEvent")
+                return
+            }
+            
             upEvent.keyboardSetUnicodeString(stringLength: unicodeString.count, unicodeString: unicodeString)
+            upEvent.flags = []
             upEvent.post(tap: .cghidEventTap)
-            logger.info("Text insertion up-event posted")
+            self?.logger.info("Text insertion up-event posted")
         }
     }
 }
