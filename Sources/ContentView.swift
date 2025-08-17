@@ -655,7 +655,7 @@ struct ListeningIndicatorView: View {
                 
                 Spacer()
                 
-                Text("ESC to close")
+                Text("ESC to cancel")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.white.opacity(0.9))
@@ -667,17 +667,6 @@ struct ListeningIndicatorView: View {
                 .fill(Color.black.opacity(0.2))
                 .shadow(radius: 8)
         )
-        .background(
-            KeyEventHandlingView(onEscape: {
-                appState.hideListeningIndicator()
-            })
-        )
-        .onAppear {
-            // Auto-focus the window to receive key events
-            DispatchQueue.main.async {
-                NSApp.keyWindow?.makeFirstResponder(NSApp.keyWindow?.contentView)
-            }
-        }
         .transition(.scale.combined(with: .opacity))
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showListeningIndicator)
     }
@@ -782,40 +771,6 @@ struct WaveformVisualizerView: View {
     }
 }
 
-struct KeyEventHandlingView: NSViewRepresentable {
-    let onEscape: () -> Void
-    
-    func makeNSView(context: Context) -> KeyCaptureView {
-        let view = KeyCaptureView()
-        view.onEscape = onEscape
-        return view
-    }
-    
-    func updateNSView(_ nsView: KeyCaptureView, context: Context) {
-        nsView.onEscape = onEscape
-    }
-}
-
-class KeyCaptureView: NSView {
-    var onEscape: (() -> Void)?
-    
-    override var acceptsFirstResponder: Bool {
-        return true
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 { // ESC key
-            onEscape?()
-        } else {
-            super.keyDown(with: event)
-        }
-    }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.window?.makeFirstResponder(self)
-    }
-}
 
 extension Notification.Name {
     static let hotKeyChanged = Notification.Name("hotKeyChanged")

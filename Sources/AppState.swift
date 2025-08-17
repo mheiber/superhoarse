@@ -4,9 +4,88 @@ import ApplicationServices
 import AppKit
 import SwiftUI
 import os.log
+import CoreGraphics
 
 struct TimeoutError: Error {
     let message = "Operation timed out"
+}
+
+class GlobalEscapeKeyMonitor {
+    private var eventTap: CFMachPort?
+    private let logger = Logger(subsystem: "com.superhoarse.lite", category: "EscapeKeyMonitor")
+    private var onEscapePressed: (() -> Void)?
+    
+    func startMonitoring(onEscape: @escaping () -> Void) {
+        guard eventTap == nil else {
+            logger.warning("Escape key monitoring already active")
+            return
+        }
+        
+        onEscapePressed = onEscape
+        
+        // Create event tap to intercept key down events
+        let eventMask = (1 << CGEventType.keyDown.rawValue)
+        
+        eventTap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(eventMask),
+            callback: { (proxy, type, event, refcon) in
+                let monitor = Unmanaged<GlobalEscapeKeyMonitor>.fromOpaque(refcon!).takeUnretainedValue()
+                return monitor.handleEvent(proxy: proxy, type: type, event: event)
+            },
+            userInfo: Unmanaged.passUnretained(self).toOpaque()
+        )
+        
+        guard let eventTap = eventTap else {
+            logger.error("Failed to create escape key event tap - accessibility permissions may be required")
+            return
+        }
+        
+        // Create run loop source and add to current run loop
+        let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        
+        // Enable the event tap
+        CGEvent.tapEnable(tap: eventTap, enable: true)
+        
+        logger.info("Global escape key monitoring started")
+    }
+    
+    func stopMonitoring() {
+        guard let eventTap = eventTap else {
+            return
+        }
+        
+        // Disable and release the event tap
+        CGEvent.tapEnable(tap: eventTap, enable: false)
+        CFMachPortInvalidate(eventTap)
+        self.eventTap = nil
+        onEscapePressed = nil
+        
+        logger.info("Global escape key monitoring stopped")
+    }
+    
+    private func handleEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        // Check if this is an escape key press
+        if type == .keyDown {
+            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+            if keyCode == 53 { // Escape key code
+                logger.info("Escape key intercepted - canceling recording")
+                onEscapePressed?()
+                // Return nil to consume the event and prevent it from reaching other applications
+                return nil
+            }
+        }
+        
+        // For all other events, pass them through unchanged
+        return Unmanaged.passUnretained(event)
+    }
+    
+    deinit {
+        stopMonitoring()
+    }
 }
 
 @MainActor
@@ -29,6 +108,7 @@ class AppState: ObservableObject {
         return parakeetEngine
     }
     private var audioLevelCancellable: AnyCancellable?
+    private var escapeKeyMonitor: GlobalEscapeKeyMonitor?
     
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppState")
     
@@ -99,6 +179,16 @@ class AppState: ObservableObject {
             setupAudioRecorder()
         }
         
+        // Start global escape key monitoring
+        if escapeKeyMonitor == nil {
+            escapeKeyMonitor = GlobalEscapeKeyMonitor()
+        }
+        escapeKeyMonitor?.startMonitoring { [weak self] in
+            Task { @MainActor in
+                self?.cancelRecording()
+            }
+        }
+        
         audioRecorder?.startRecording()
         isRecording = true
         showListeningIndicator = true
@@ -109,6 +199,10 @@ class AppState: ObservableObject {
         guard isRecording else { return }
         
         logger.info("Stopping recording...")
+        
+        // Stop escape key monitoring
+        escapeKeyMonitor?.stopMonitoring()
+        
         audioRecorder?.stopRecording { [weak self] audioData in
             Task {
                 await self?.processAudio(audioData)
@@ -356,6 +450,21 @@ class AppState: ObservableObject {
     }
     
     func hideListeningIndicator() {
+        showListeningIndicator = false
+    }
+    
+    func cancelRecording() {
+        if isRecording {
+            logger.info("Recording cancelled by user")
+            
+            // Stop escape key monitoring
+            escapeKeyMonitor?.stopMonitoring()
+            
+            audioRecorder?.stopRecording { _ in
+                // Discard the audio data when cancelled
+            }
+            isRecording = false
+        }
         showListeningIndicator = false
     }
     
