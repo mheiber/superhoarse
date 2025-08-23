@@ -26,7 +26,7 @@ class ParakeetEngine: SpeechRecognitionEngine {
         logger.info("Starting ParakeetEngine initialization...")
         do {
             // Use default configuration with debug enabled for troubleshooting
-            let config = ASRConfig(enableDebug: true)
+            let config = ASRConfig(enableDebug: false)
             logger.info("Created optimized ASRConfig for short audio transcription")
             let manager = AsrManager(config: config)
             logger.info("Created AsrManager")

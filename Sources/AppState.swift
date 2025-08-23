@@ -97,6 +97,7 @@ class AppState: ObservableObject {
     @Published var isInitialized = false
     @Published var hasAccessibilityPermission = false
     @Published var showListeningIndicator = false
+    @Published var showPasteNotification = false
     @Published var currentAudioLevel: Float = 0.0
     @Published var currentSpeechEngine: SpeechEngineType = .parakeet
     
@@ -302,7 +303,8 @@ class AppState: ObservableObject {
             let sanitizedText = sanitizeTextForInsertion(text)
             insertTextAtCursor(sanitizedText)
         } else {
-            logger.error("Accessibility permission denied. Text will not be inserted.")
+            logger.info("Accessibility permission denied. Showing paste notification instead.")
+            showPasteNotification = true
         }
     }
     
@@ -451,6 +453,10 @@ class AppState: ObservableObject {
     
     func hideListeningIndicator() {
         showListeningIndicator = false
+    }
+    
+    func hidePasteNotification() {
+        showPasteNotification = false
     }
     
     func cancelRecording() {

@@ -20,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var settingsWindow: NSWindow?
     private var listeningIndicatorWindow: NSWindow?
+    private var pasteNotificationWindow: NSWindow?
     private var appState: AppState?
     private var cancellables = Set<AnyCancellable>()
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppDelegate")
@@ -140,6 +141,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.toggleListeningIndicator(show)
             }
             .store(in: &cancellables)
+        
+        appState.$showPasteNotification
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] show in
+                self?.togglePasteNotification(show)
+            }
+            .store(in: &cancellables)
     }
     
     // COVERAGE_EXCLUDE_START - UI indicator management requires running app with windows
@@ -189,6 +197,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func hideListeningIndicator() {
         listeningIndicatorWindow?.orderOut(nil)
         logger.info("Listening indicator hidden.")
+    }
+    
+    @MainActor
+    private func togglePasteNotification(_ show: Bool) {
+        if show {
+            showPasteNotification()
+        } else {
+            hidePasteNotification()
+        }
+    }
+    
+    @MainActor
+    private func showPasteNotification() {
+        guard let appState = appState else { return }
+        
+        // Always recreate the window with fresh content
+        let notificationView = PasteNotificationView(transcribedText: appState.transcriptionText)
+            .environmentObject(appState)
+        let hostingController = NSHostingController(rootView: notificationView)
+        
+        pasteNotificationWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        
+        pasteNotificationWindow?.contentViewController = hostingController
+        pasteNotificationWindow?.isOpaque = false
+        pasteNotificationWindow?.backgroundColor = .clear
+        pasteNotificationWindow?.level = .floating
+        pasteNotificationWindow?.isMovableByWindowBackground = true
+        pasteNotificationWindow?.isReleasedWhenClosed = false
+        
+        if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let windowSize = pasteNotificationWindow?.frame.size ?? .zero
+            let x = screenFrame.midX - windowSize.width / 2
+            let y = screenFrame.midY + 50
+            pasteNotificationWindow?.setFrameOrigin(CGPoint(x: x, y: y))
+        }
+        
+        pasteNotificationWindow?.makeKeyAndOrderFront(nil)
+        logger.info("Paste notification shown with text: '\(appState.transcriptionText)'")
+    }
+    
+    private func hidePasteNotification() {
+        pasteNotificationWindow?.orderOut(nil)
+        logger.info("Paste notification hidden.")
     }
     // COVERAGE_EXCLUDE_END
 }
