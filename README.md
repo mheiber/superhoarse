@@ -2,6 +2,17 @@
 
 A lightweight, privacy-focused voice-to-text app for macOS. Built with Swift and powered by the Parakeet engine for fast, local speech recognition.
 
+- 98% vibecoded, inspired by SuperWhisper.
+- 0 API calls, all local
+
+This is what it looks like when you're speaking (but smaller and translucent):
+
+![voicewave](./voicewave.png)
+
+And configuring:
+
+![config](./config.png)
+
 ## Features
 
 - **🎤 Global Hotkey Recording** - Press `⌘⇧Space` to start/stop recording from anywhere
