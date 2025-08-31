@@ -421,7 +421,7 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         // User rapidly switches between engines and records (stress test)
         let operations = 3
         
-        for i in 0..<operations {
+        for _ in 0..<operations {
             // User switches engine
             let engine: SpeechEngineType = .parakeet
             appState.switchSpeechEngine(to: engine)
