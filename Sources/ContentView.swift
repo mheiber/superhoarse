@@ -364,10 +364,11 @@ struct KeyboardShortcutConfigView: View {
     @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
     
     private let modifierOptions = [
-        (name: "⌘⇧ (Cmd+Shift)", value: 0),
-        (name: "⌘⌥ (Cmd+Option)", value: 1),
-        (name: "⌘⌃ (Cmd+Control)", value: 2),
-        (name: "⌥⇧ (Option+Shift)", value: 3)
+        (name: "⌥ (Option)", value: 0),
+        (name: "⌘⇧ (Cmd+Shift)", value: 1),
+        (name: "⌘⌥ (Cmd+Option)", value: 2),
+        (name: "⌘⌃ (Cmd+Control)", value: 3),
+        (name: "⌥⇧ (Option+Shift)", value: 4)
     ]
     
     private let keyOptions = [
@@ -648,7 +649,7 @@ struct ListeningIndicatorView: View {
             WaveformVisualizerView(audioLevel: appState.currentAudioLevel)
             
             HStack {
-                Text("Press \(appState.getCurrentShortcutString()) to stop")
+                Text("\(appState.getCurrentShortcutString()) to stop")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.white.opacity(0.9))

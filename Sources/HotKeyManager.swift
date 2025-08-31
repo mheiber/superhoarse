@@ -8,7 +8,7 @@ class HotKeyManager {
     
     // Current hotkey configuration
     private var keyCode: UInt32 = 49  // Space
-    private var modifiers: UInt32 = UInt32(cmdKey | shiftKey)
+    private var modifiers: UInt32 = UInt32(optionKey)
     
     init(callback: @escaping () -> Void) {
         self.callback = callback
@@ -35,16 +35,18 @@ class HotKeyManager {
         
         // Convert modifier value to Carbon modifiers
         switch modifierValue {
-        case 0: // Cmd+Shift
+        case 0: // Option only
+            modifiers = UInt32(optionKey)
+        case 1: // Cmd+Shift
             modifiers = UInt32(cmdKey | shiftKey)
-        case 1: // Cmd+Option
+        case 2: // Cmd+Option
             modifiers = UInt32(cmdKey | optionKey)
-        case 2: // Cmd+Control
+        case 3: // Cmd+Control
             modifiers = UInt32(cmdKey | controlKey)
-        case 3: // Option+Shift
+        case 4: // Option+Shift
             modifiers = UInt32(optionKey | shiftKey)
         default:
-            modifiers = UInt32(cmdKey | shiftKey)
+            modifiers = UInt32(optionKey)
         }
         
         // Use custom key code or default to Space
