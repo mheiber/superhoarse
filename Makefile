@@ -1,4 +1,4 @@
-.PHONY: build run clean install
+.PHONY: build run clean install run-xcode
 
 # Build the application
 build:
@@ -7,6 +7,10 @@ build:
 # Run in development mode
 run:
 	swift run
+
+# Build and run with Xcode
+run-xcode:
+	./run-xcode.sh
 
 # Clean build artifacts
 clean:
