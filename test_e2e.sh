@@ -3,6 +3,23 @@
 
 set -e  # Exit on any error
 
+# Parse command line arguments
+USE_XCODE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --xcode)
+            USE_XCODE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--xcode]"
+            echo "  --xcode: Use Xcode build instead of swift build"
+            exit 1
+            ;;
+    esac
+done
+
 # Cleanup function to restore state even on failure
 cleanup() {
     echo "Performing cleanup..."
@@ -217,17 +234,52 @@ echo "Killing existing Superhoarse instances..."
 pkill -f Superhoarse || echo "No running instances"
 
 # 2. Build the app
-echo "Building Superhoarse..."
-swift build -c release
-if [ $? -ne 0 ]; then
-    echo "Build failed!"
-    exit 1
+if [ "$USE_XCODE" = true ]; then
+    echo "Building Superhoarse with Xcode..."
+    xcodebuild -project superhoarse.xcodeproj -scheme superhoarse -configuration Release build CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+    if [ $? -ne 0 ]; then
+        echo "Xcode build failed!"
+        exit 1
+    fi
+    
+    # Find the built app and manually sign it for local execution
+    BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Release/superhoarse.app" -type d 2>/dev/null | head -1)
+    if [ ! -z "$BUILT_APP" ]; then
+        echo "Manually signing app for local execution..."
+        codesign --force --deep --sign - "$BUILT_APP" || echo "Warning: Could not sign app, proceeding anyway..."
+    fi
+else
+    echo "Building Superhoarse with Swift..."
+    swift build -c release
+    if [ $? -ne 0 ]; then
+        echo "Swift build failed!"
+        exit 1
+    fi
 fi
 
 # 3. Start the app
 echo "Starting Superhoarse..."
-swift run &
-APP_PID=$!
+if [ "$USE_XCODE" = true ]; then
+    # Find the built app and run it
+    BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Release/superhoarse.app" -type d 2>/dev/null | head -1)
+    if [ -z "$BUILT_APP" ]; then
+        # Try alternative build locations
+        BUILT_APP=$(find . -path "*/Build/Products/Release/*.app" -type d 2>/dev/null | head -1)
+    fi
+    if [ -z "$BUILT_APP" ]; then
+        echo "❌ Could not find built app after Xcode build"
+        echo "Looking for app in typical Xcode build locations..."
+        find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d 2>/dev/null | head -5
+        exit 1
+    fi
+    echo "Found built app at: $BUILT_APP"
+    # Run the app directly rather than using 'open' to preserve environment
+    "$BUILT_APP/Contents/MacOS/superhoarse" &
+    APP_PID=$!
+else
+    swift run &
+    APP_PID=$!
+fi
 
 # 4. Wait for model to load (use generous timeout)
 echo "Waiting for Parakeet model to load (60 seconds timeout)..."
