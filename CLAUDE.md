@@ -111,4 +111,7 @@ Use `./test-coverage.sh` to generate detailed coverage reports. Tests exclude ap
 - Audio processing uses 16kHz sample rate optimized for speech recognition
 - Temporary audio files are automatically cleaned up after transcription
 - Memory usage optimized for Apple Silicon Macs (~100-200MB including models)
+
+## User flows
+
 - Remember to always update @user_flows.md When we make a change that affects user workflows.
