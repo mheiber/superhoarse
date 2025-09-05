@@ -5,7 +5,7 @@
     <key>CFBundleExecutable</key>
     <string>Superhoarse</string>
     <key>CFBundleIdentifier</key>
-    <string>com.superhoarse.app</string>
+    <string>ink.maxheiber.superhoarse</string>
     <key>CFBundleName</key>
     <string>Superhoarse</string>
     <key>CFBundleDisplayName</key>
