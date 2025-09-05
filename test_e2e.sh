@@ -3,6 +3,43 @@
 
 set -e  # Exit on any error
 
+# Cleanup function to restore state even on failure
+cleanup() {
+    echo "Performing cleanup..."
+    
+    # Kill the app if it's running
+    if [ ! -z "$APP_PID" ]; then
+        kill $APP_PID 2>/dev/null || true
+    fi
+    
+    # Remove temporary files
+    rm -f /tmp/superhoarse_screen.png /tmp/superhoarse_test.txt
+    
+    # Restore Hammerspoon config if we have a backup
+    if [ -f ~/.hammerspoon/init.lua.backup ]; then
+        echo "Restoring original Hammerspoon configuration..."
+        mv ~/.hammerspoon/init.lua.backup ~/.hammerspoon/init.lua
+        killall Hammerspoon 2>/dev/null || true
+        sleep 1
+        open -a Hammerspoon
+    elif [ "$HAMMERSPOON_CONFIG_CREATED" = "true" ]; then
+        echo "Removing test Hammerspoon configuration..."
+        rm -f ~/.hammerspoon/init.lua
+        killall Hammerspoon 2>/dev/null || true
+        sleep 1
+        open -a Hammerspoon
+    fi
+    
+    # Restore original volume if we saved it
+    if [ ! -z "$ORIGINAL_VOLUME" ]; then
+        echo "Restoring original volume to $ORIGINAL_VOLUME%..."
+        osascript -e "set volume output volume $ORIGINAL_VOLUME" 2>/dev/null || true
+    fi
+}
+
+# Set trap to run cleanup on exit
+trap cleanup EXIT
+
 # Function to calculate Levenshtein distance using a simpler approach
 levenshtein() {
     local s1="$1" s2="$2"
@@ -36,15 +73,74 @@ print(levenshtein('$s1', '$s2'))
 # Check prerequisites
 echo "Checking prerequisites..."
 
-# Set speaker volume to ensure audio works
-echo "Setting speaker volume to 50%..."
-osascript -e "set volume output volume 50"
+# Configure audio output to ensure speakers work
+echo "Configuring audio output..."
 
-# Check if Hammerspoon is installed
+# Get current volume level and save it for restoration
+ORIGINAL_VOLUME=$(osascript -e "output volume of (get volume settings)")
+echo "Original volume: $ORIGINAL_VOLUME%"
+
+# Set volume to a reasonable level (60%) to ensure audio is audible
+echo "Setting speaker volume to 20% for test..."
+osascript -e "set volume output volume 20"
+
+# Ensure audio output is not muted
+osascript -e "set volume with output muted false" 2>/dev/null || true
+
+# Test that audio output is working by playing a brief test sound
+echo "Testing audio output..."
+say "Audio test" &
+AUDIO_TEST_PID=$!
+sleep 2
+kill $AUDIO_TEST_PID 2>/dev/null || true
+
+echo "✅ Audio configured successfully"
+
+# Check if Hammerspoon is installed, ask user for installation if missing
 if [ ! -d "/Applications/Hammerspoon.app" ]; then
-    echo "❌ Hammerspoon.app not found in /Applications"
-    echo "Please install Hammerspoon from https://www.hammerspoon.org/"
-    exit 1
+    echo "❌ Hammerspoon not found - required for e2e testing"
+    echo ""
+    echo "Hammerspoon is needed to simulate keyboard shortcuts for testing."
+    echo "Would you like to install it automatically? (y/N)"
+    read -r INSTALL_CHOICE
+    
+    if [[ "$INSTALL_CHOICE" =~ ^[Yy]$ ]]; then
+        echo "Installing Hammerspoon..."
+        
+        # Download and install Hammerspoon using Homebrew (most reliable method)
+        if command -v brew >/dev/null 2>&1; then
+            echo "Installing Hammerspoon via Homebrew..."
+            brew install --cask hammerspoon
+        else
+            echo "Homebrew not found. Would you like to install Homebrew first? (y/N)"
+            read -r INSTALL_BREW
+            
+            if [[ "$INSTALL_BREW" =~ ^[Yy]$ ]]; then
+                echo "Installing Homebrew first, then Hammerspoon..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                # Add brew to PATH for this session
+                eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null
+                brew install --cask hammerspoon
+            else
+                echo "❌ Cannot proceed without Homebrew. Please install Hammerspoon manually:"
+                echo "   1. Visit https://www.hammerspoon.org/"
+                echo "   2. Download and install Hammerspoon"
+                echo "   3. Run this test script again"
+                exit 1
+            fi
+        fi
+        
+        echo "✅ Hammerspoon installed successfully"
+    else
+        echo "❌ Cannot proceed without Hammerspoon. Please install it manually:"
+        echo "   1. Visit https://www.hammerspoon.org/"
+        echo "   2. Download and install Hammerspoon"
+        echo "   3. Run this test script again"
+        echo ""
+        echo "Alternatively, you can install via Homebrew:"
+        echo "   brew install --cask hammerspoon"
+        exit 1
+    fi
 fi
 
 # Check if Hammerspoon is running
@@ -62,6 +158,8 @@ mkdir -p ~/.hammerspoon
 if [ -f ~/.hammerspoon/init.lua ]; then
     echo "Backing up existing Hammerspoon configuration..."
     cp ~/.hammerspoon/init.lua ~/.hammerspoon/init.lua.backup
+else
+    HAMMERSPOON_CONFIG_CREATED=true
 fi
 
 cat > ~/.hammerspoon/init.lua << 'EOF'
@@ -77,10 +175,39 @@ open -a Hammerspoon
 echo "Waiting for Hammerspoon to start..."
 sleep 3
 
-# Test IPC connection
+# Test IPC connection and handle accessibility permissions
 if ! /Applications/Hammerspoon.app/Contents/Frameworks/hs/hs -c 'print("IPC test")' > /dev/null 2>&1; then
-    echo "❌ Hammerspoon IPC not working. Please ensure Hammerspoon has accessibility permissions."
-    exit 1
+    echo "⚠️  Hammerspoon needs accessibility permissions to continue."
+    echo "🔧 Opening System Preferences to grant permissions..."
+    
+    # Open System Preferences to the right location
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+    
+    echo "📋 Please:"
+    echo "  1. Click the lock icon and enter your password"
+    echo "  2. Find and check 'Hammerspoon' in the list"
+    echo "  3. Close System Preferences"
+    echo ""
+    echo "⏳ Waiting for accessibility permissions (checking every 5 seconds)..."
+    
+    # Poll for accessibility permissions
+    PERMISSION_GRANTED=false
+    for i in {1..24}; do  # Wait up to 2 minutes
+        sleep 5
+        if /Applications/Hammerspoon.app/Contents/Frameworks/hs/hs -c 'print("IPC test")' > /dev/null 2>&1; then
+            PERMISSION_GRANTED=true
+            break
+        fi
+        echo "  Still waiting... (attempt $i/24)"
+    done
+    
+    if [ "$PERMISSION_GRANTED" = false ]; then
+        echo "❌ Hammerspoon accessibility permissions not granted after 2 minutes."
+        echo "Please grant accessibility permissions and run the test again."
+        exit 1
+    fi
+    
+    echo "✅ Hammerspoon accessibility permissions granted!"
 fi
 
 echo "✅ Prerequisites checked successfully"
@@ -147,24 +274,5 @@ else
     exit 1
 fi
 
-# Cleanup and restore user's Hammerspoon config
-echo "Cleaning up..."
-kill $APP_PID 2>/dev/null || true
-rm -f /tmp/superhoarse_screen.png /tmp/superhoarse_text.txt
-
-# Restore user's original Hammerspoon config
-if [ -f ~/.hammerspoon/init.lua.backup ]; then
-    echo "Restoring original Hammerspoon configuration..."
-    mv ~/.hammerspoon/init.lua.backup ~/.hammerspoon/init.lua
-else
-    echo "Removing test Hammerspoon configuration..."
-    rm -f ~/.hammerspoon/init.lua
-fi
-
-# Restart Hammerspoon to restore original state
-killall Hammerspoon 2>/dev/null || true
-sleep 1
-open -a Hammerspoon
-
 echo "✅ E2E test completed successfully!"
-echo "Your original Hammerspoon configuration has been restored."
+echo "Your original Hammerspoon configuration and audio settings will be restored by the cleanup function."
