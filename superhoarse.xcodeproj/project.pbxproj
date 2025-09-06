@@ -45,11 +45,17 @@
 			membershipExceptions = (
 				AppState.swift,
 				AudioRecorder.swift,
+				BundledAsrModels.swift,
 				ContentView.swift,
 				HotKeyManager.swift,
 				main.swift,
 				ParakeetEngine.swift,
 				PasteNotificationView.swift,
+				Resources/Melspectogram.mlmodelc,
+				Resources/parakeet_vocab.json,
+				Resources/ParakeetDecoder.mlmodelc,
+				Resources/ParakeetEncoder_v2.mlmodelc,
+				Resources/RNNTJoint.mlmodelc,
 				SpeechRecognitionEngine.swift,
 			);
 			target = 50B76D0C2E6C7B1A00F89E7C /* superhoarse */;

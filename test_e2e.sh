@@ -2,6 +2,7 @@
 # Full e2e test for Superhoarse
 
 set -e  # Exit on any error
+make models
 
 # Parse command line arguments
 USE_XCODE=false

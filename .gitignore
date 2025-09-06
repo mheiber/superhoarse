@@ -32,38 +32,17 @@ Superhoarse.app/
 # Built binary (from make install)
 *.app
 
-# Model files and directories
-Models/
-*.model
-*.bin
-*.gguf
-*.pth
-*.safetensors
-*.ckpt
-
 # Parakeet/FluidAudio models (downloaded automatically)
 parakeet*/
 fluidaudio*/
 ASR*/
 asr*/
 
-# Whisper models
-whisper*/
-*.whisper
+# models. ./download_models.sh downloads these
+Sources/Resources
 
-# LLaMA models  
-llama*/
-*.llama
-
-# Swift toolchain (not needed in git)
+# Swift toolchain
 swift-*-RELEASE*/
 swift-*-ubuntu*/
 *.tar.gz
-
-# Other ML model formats
-*.onnx
-*.tflite
-*.mlmodel
-*.h5
-*.pb
 

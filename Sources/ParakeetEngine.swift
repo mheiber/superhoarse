@@ -31,9 +31,11 @@ class ParakeetEngine: SpeechRecognitionEngine {
             let manager = AsrManager(config: config)
             logger.info("Created AsrManager")
             
-            // Initialize the AsrManager using the recommended approach
-            let models = try await AsrModels.downloadAndLoad()
-            logger.info("Downloaded and loaded ASR models")
+            // Load bundled models only (no network access)
+            logger.info("Loading bundled ASR models (no network required)")
+            let models = try BundledAsrModels.loadBundledModels()
+            logger.info("Loaded bundled ASR models")
+            
             try await manager.initialize(models: models)
             logger.info("AsrManager.initialize(models:) completed")
             

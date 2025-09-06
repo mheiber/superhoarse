@@ -2,6 +2,7 @@
 # E2E test for Superhoarse - Xcode Release Build Version
 
 set -e  # Exit on any error
+make models
 
 # Cleanup function to restore state even on failure
 cleanup() {

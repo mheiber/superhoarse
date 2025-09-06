@@ -1,4 +1,4 @@
-.PHONY: build build-xcode run run-xcode clean install install-xcode test test-xcode
+.PHONY: build build-xcode run run-xcode clean install install-xcode test test-xcode models
 
 # Build the application
 build:
@@ -26,8 +26,24 @@ clean:
 	swift package clean
 	rm -rf .build
 
-# Install to Applications (requires build first)
-install: build
+# Download and verify models
+models:
+	@echo "🔍 Checking model files..."
+	@if [ ! -f "Sources/Resources/models.sha256" ]; then \
+		echo "⬇️  Checksum file missing, downloading models..."; \
+		./download_models.sh; \
+	else \
+		echo "✅ Checksum file exists, verifying integrity..."; \
+		cd Sources/Resources && if sha256sum -c models.sha256 >/dev/null 2>&1 && [ $$? -eq 0 ]; then \
+			echo "✅ All model files verified successfully"; \
+		else \
+			echo "❌ Model verification failed, re-downloading..."; \
+			cd ../.. && ./download_models.sh; \
+		fi \
+	fi
+
+# Install to Applications (requires build and models)
+install: build models
 	@echo "Killing existing Superhoarse processes..."
 	-pkill -f "Superhoarse" || true
 	@echo "Creating application bundle..."
@@ -49,7 +65,7 @@ install: build
 	@echo "You can now launch from /Applications/Superhoarse.app"
 
 # Install Xcode-built version to Applications
-install-xcode: build-xcode
+install-xcode: build-xcode models
 	@echo "Killing existing Superhoarse processes..."
 	-pkill -f "Superhoarse" || true
 	@echo "Locating Xcode-built app..."

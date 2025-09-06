@@ -22,7 +22,13 @@ let package = Package(
                 .product(name: "FluidAudio", package: "FluidAudio")
             ],
             path: "Sources",
-            resources: [.process("Resources")]
+            resources: [
+                .copy("Resources/Melspectogram.mlmodelc"),
+                .copy("Resources/ParakeetEncoder_v2.mlmodelc"),
+                .copy("Resources/ParakeetDecoder.mlmodelc"),
+                .copy("Resources/RNNTJoint.mlmodelc"),
+                .copy("Resources/parakeet_vocab.json")
+            ]
         ),
         .testTarget(
             name: "SuperhoarseTests",
