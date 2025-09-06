@@ -413,21 +413,6 @@ struct KeyboardShortcutConfigView: View {
     @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
     @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
     
-    private let modifierOptions = [
-        (name: "⌥ (Option)", value: 0),
-        (name: "⌘⇧ (Cmd+Shift)", value: 1),
-        (name: "⌘⌥ (Cmd+Option)", value: 2),
-        (name: "⌘⌃ (Cmd+Control)", value: 3),
-        (name: "⌥⇧ (Option+Shift)", value: 4)
-    ]
-    
-    private let keyOptions = [
-        (name: "Space", code: 49),
-        (name: "R", code: 15),
-        (name: "T", code: 17),
-        (name: "M", code: 46),
-        (name: "V", code: 9)
-    ]
     
     var body: some View {
         VStack(spacing: 16) {
@@ -557,7 +542,7 @@ struct KeyboardShortcutConfigView: View {
                             .foregroundColor(.white.opacity(0.7))
                         
                         Menu {
-                            ForEach(modifierOptions, id: \.value) { option in
+                            ForEach(HotkeyConfiguration.modifierOptions, id: \.value) { option in
                                 Button(action: {
                                     hotKeyModifier = option.value
                                     NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
@@ -575,7 +560,7 @@ struct KeyboardShortcutConfigView: View {
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                Text(modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧")
+                                Text(HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧")
                                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                                     .foregroundColor(.white)
                                 
@@ -605,7 +590,7 @@ struct KeyboardShortcutConfigView: View {
                             .foregroundColor(.white.opacity(0.7))
                         
                         Menu {
-                            ForEach(keyOptions, id: \.code) { option in
+                            ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
                                 Button(action: {
                                     hotKeyCode = option.code
                                     NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
@@ -623,7 +608,7 @@ struct KeyboardShortcutConfigView: View {
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                Text(keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space")
+                                Text(HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space")
                                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                                     .foregroundColor(.white)
                                 
@@ -671,8 +656,8 @@ struct KeyboardShortcutConfigView: View {
     }
     
     private var currentShortcutString: String {
-        let modifierName = modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧"
-        let keyName = keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space"
+        let modifierName = HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧"
+        let keyName = HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space"
         return "\(modifierName.components(separatedBy: " ").first ?? "⌘⇧") + \(keyName)"
     }
 }

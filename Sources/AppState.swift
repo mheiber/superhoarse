@@ -10,6 +10,32 @@ struct TimeoutError: Error {
     let message = "Operation timed out"
 }
 
+struct HotkeyConfiguration {
+    static let modifierOptions = [
+        (name: "⌥ (Option)", symbol: "⌥", value: 0),
+        (name: "⌘⇧ (Cmd+Shift)", symbol: "⌘⇧", value: 1),
+        (name: "⌘⌥ (Cmd+Option)", symbol: "⌘⌥", value: 2),
+        (name: "⌘⌃ (Cmd+Control)", symbol: "⌘⌃", value: 3),
+        (name: "⌥⇧ (Option+Shift)", symbol: "⌥⇧", value: 4)
+    ]
+    
+    static let keyOptions = [
+        (name: "Space", code: 49),
+        (name: "R", code: 15),
+        (name: "T", code: 17),
+        (name: "M", code: 46),
+        (name: "V", code: 9)
+    ]
+    
+    static func getModifierSymbol(for value: Int) -> String {
+        return modifierOptions.first { $0.value == value }?.symbol ?? "⌘⇧"
+    }
+    
+    static func getKeyName(for code: Int) -> String {
+        return keyOptions.first { $0.code == code }?.name ?? "Key(\(code))"
+    }
+}
+
 class GlobalEscapeKeyMonitor {
     private var eventTap: CFMachPort?
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "EscapeKeyMonitor")
@@ -430,24 +456,8 @@ class AppState: ObservableObject {
         let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
         let keyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
         
-        let modifierString: String
-        switch modifierValue {
-        case 0: modifierString = "⌘⇧"
-        case 1: modifierString = "⌘⌥"
-        case 2: modifierString = "⌘⌃"
-        case 3: modifierString = "⌥⇧"
-        default: modifierString = "⌘⇧"
-        }
-        
-        let keyString: String
-        switch keyCodeValue > 0 ? keyCodeValue : 49 {
-        case 49: keyString = "Space"
-        case 15: keyString = "R"
-        case 17: keyString = "T"
-        case 46: keyString = "M"
-        case 9: keyString = "V"
-        default: keyString = "Key(\(keyCodeValue))"
-        }
+        let modifierString = HotkeyConfiguration.getModifierSymbol(for: modifierValue)
+        let keyString = HotkeyConfiguration.getKeyName(for: keyCodeValue > 0 ? keyCodeValue : 49)
         
         return "\(modifierString)\(keyString)"
     }
