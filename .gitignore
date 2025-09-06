@@ -3,7 +3,7 @@
 Packages/
 
 # Xcode
-*.xcodeproj
+#*.xcodeproj
 *.xcworkspace
 xcuserdata/
 DerivedData/

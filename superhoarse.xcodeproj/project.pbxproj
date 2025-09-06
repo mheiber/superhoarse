@@ -1,0 +1,825 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		50B76D4F2E6C7DC000F89E7C /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 50B76D4E2E6C7DC000F89E7C /* FluidAudio */; };
+		50B76D532E6C81CC00F89E7C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 50B76D522E6C81CC00F89E7C /* Assets.xcassets */; };
+		50B76D542E6C856300F89E7C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 50B76D522E6C81CC00F89E7C /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		50B76D1B2E6C7B1B00F89E7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 503F3D992E68F098009009D3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B76D0C2E6C7B1A00F89E7C;
+			remoteInfo = superhoarse;
+		};
+		50B76D252E6C7B1B00F89E7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 503F3D992E68F098009009D3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B76D0C2E6C7B1A00F89E7C;
+			remoteInfo = superhoarse;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		503F3DAF2E68F099009009D3 /* superhoarseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = superhoarseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		503F3DB92E68F099009009D3 /* superhoarseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = superhoarseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B76D0D2E6C7B1A00F89E7C /* superhoarse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = superhoarse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B76D1A2E6C7B1B00F89E7C /* superhoarseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = superhoarseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B76D242E6C7B1B00F89E7C /* superhoarseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = superhoarseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B76D522E6C81CC00F89E7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		50B76D552E6C86DE00F89E7C /* superhoarseRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = superhoarseRelease.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		50B76D4B2E6C7DA600F89E7C /* Exceptions for "Sources" folder in "superhoarse" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppState.swift,
+				AudioRecorder.swift,
+				ContentView.swift,
+				HotKeyManager.swift,
+				main.swift,
+				ParakeetEngine.swift,
+				PasteNotificationView.swift,
+				SpeechRecognitionEngine.swift,
+			);
+			target = 50B76D0C2E6C7B1A00F89E7C /* superhoarse */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		503F3DA32E68F098009009D3 /* Sources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				50B76D4B2E6C7DA600F89E7C /* Exceptions for "Sources" folder in "superhoarse" target */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		503F3DB22E68F099009009D3 /* superhoarseTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = superhoarseTests;
+			sourceTree = "<group>";
+		};
+		503F3DBC2E68F099009009D3 /* superhoarseUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = superhoarseUITests;
+			sourceTree = "<group>";
+		};
+		50B76D1D2E6C7B1B00F89E7C /* superhoarseTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = superhoarseTests;
+			sourceTree = "<group>";
+		};
+		50B76D272E6C7B1B00F89E7C /* superhoarseUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = superhoarseUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		503F3DAC2E68F099009009D3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		503F3DB62E68F099009009D3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D0A2E6C7B1A00F89E7C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B76D4F2E6C7DC000F89E7C /* FluidAudio in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D172E6C7B1B00F89E7C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D212E6C7B1B00F89E7C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		503F3D982E68F098009009D3 = {
+			isa = PBXGroup;
+			children = (
+				50B76D552E6C86DE00F89E7C /* superhoarseRelease.entitlements */,
+				50B76D522E6C81CC00F89E7C /* Assets.xcassets */,
+				503F3DA32E68F098009009D3 /* Sources */,
+				503F3DB22E68F099009009D3 /* superhoarseTests */,
+				503F3DBC2E68F099009009D3 /* superhoarseUITests */,
+				50B76D1D2E6C7B1B00F89E7C /* superhoarseTests */,
+				50B76D272E6C7B1B00F89E7C /* superhoarseUITests */,
+				50B76D4D2E6C7DC000F89E7C /* Frameworks */,
+				503F3DA22E68F098009009D3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		503F3DA22E68F098009009D3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				503F3DAF2E68F099009009D3 /* superhoarseTests.xctest */,
+				503F3DB92E68F099009009D3 /* superhoarseUITests.xctest */,
+				50B76D0D2E6C7B1A00F89E7C /* superhoarse.app */,
+				50B76D1A2E6C7B1B00F89E7C /* superhoarseTests.xctest */,
+				50B76D242E6C7B1B00F89E7C /* superhoarseUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		50B76D4D2E6C7DC000F89E7C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		503F3DAE2E68F099009009D3 /* superhoarseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 503F3DC62E68F099009009D3 /* Build configuration list for PBXNativeTarget "superhoarseTests" */;
+			buildPhases = (
+				503F3DAB2E68F099009009D3 /* Sources */,
+				503F3DAC2E68F099009009D3 /* Frameworks */,
+				503F3DAD2E68F099009009D3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				503F3DB22E68F099009009D3 /* superhoarseTests */,
+			);
+			name = superhoarseTests;
+			packageProductDependencies = (
+			);
+			productName = superhoarseTests;
+			productReference = 503F3DAF2E68F099009009D3 /* superhoarseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		503F3DB82E68F099009009D3 /* superhoarseUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 503F3DC92E68F099009009D3 /* Build configuration list for PBXNativeTarget "superhoarseUITests" */;
+			buildPhases = (
+				503F3DB52E68F099009009D3 /* Sources */,
+				503F3DB62E68F099009009D3 /* Frameworks */,
+				503F3DB72E68F099009009D3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				503F3DBC2E68F099009009D3 /* superhoarseUITests */,
+			);
+			name = superhoarseUITests;
+			packageProductDependencies = (
+			);
+			productName = superhoarseUITests;
+			productReference = 503F3DB92E68F099009009D3 /* superhoarseUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		50B76D0C2E6C7B1A00F89E7C /* superhoarse */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B76D2C2E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarse" */;
+			buildPhases = (
+				50B76D092E6C7B1A00F89E7C /* Sources */,
+				50B76D0A2E6C7B1A00F89E7C /* Frameworks */,
+				50B76D0B2E6C7B1A00F89E7C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = superhoarse;
+			packageProductDependencies = (
+				50B76D4E2E6C7DC000F89E7C /* FluidAudio */,
+			);
+			productName = superhoarse;
+			productReference = 50B76D0D2E6C7B1A00F89E7C /* superhoarse.app */;
+			productType = "com.apple.product-type.application";
+		};
+		50B76D192E6C7B1B00F89E7C /* superhoarseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B76D2F2E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarseTests" */;
+			buildPhases = (
+				50B76D162E6C7B1B00F89E7C /* Sources */,
+				50B76D172E6C7B1B00F89E7C /* Frameworks */,
+				50B76D182E6C7B1B00F89E7C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				50B76D1C2E6C7B1B00F89E7C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				50B76D1D2E6C7B1B00F89E7C /* superhoarseTests */,
+			);
+			name = superhoarseTests;
+			packageProductDependencies = (
+			);
+			productName = superhoarseTests;
+			productReference = 50B76D1A2E6C7B1B00F89E7C /* superhoarseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		50B76D232E6C7B1B00F89E7C /* superhoarseUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 50B76D322E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarseUITests" */;
+			buildPhases = (
+				50B76D202E6C7B1B00F89E7C /* Sources */,
+				50B76D212E6C7B1B00F89E7C /* Frameworks */,
+				50B76D222E6C7B1B00F89E7C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				50B76D262E6C7B1B00F89E7C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				50B76D272E6C7B1B00F89E7C /* superhoarseUITests */,
+			);
+			name = superhoarseUITests;
+			packageProductDependencies = (
+			);
+			productName = superhoarseUITests;
+			productReference = 50B76D242E6C7B1B00F89E7C /* superhoarseUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		503F3D992E68F098009009D3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					503F3DAE2E68F099009009D3 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 503F3DA02E68F098009009D3;
+					};
+					503F3DB82E68F099009009D3 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 503F3DA02E68F098009009D3;
+					};
+					50B76D0C2E6C7B1A00F89E7C = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					50B76D192E6C7B1B00F89E7C = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 50B76D0C2E6C7B1A00F89E7C;
+					};
+					50B76D232E6C7B1B00F89E7C = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 50B76D0C2E6C7B1A00F89E7C;
+					};
+				};
+			};
+			buildConfigurationList = 503F3D9C2E68F098009009D3 /* Build configuration list for PBXProject "superhoarse" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 503F3D982E68F098009009D3;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				503F3E3F2E68F3F4009009D3 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 503F3DA22E68F098009009D3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				503F3DAE2E68F099009009D3 /* superhoarseTests */,
+				503F3DB82E68F099009009D3 /* superhoarseUITests */,
+				50B76D0C2E6C7B1A00F89E7C /* superhoarse */,
+				50B76D192E6C7B1B00F89E7C /* superhoarseTests */,
+				50B76D232E6C7B1B00F89E7C /* superhoarseUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		503F3DAD2E68F099009009D3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B76D532E6C81CC00F89E7C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		503F3DB72E68F099009009D3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D0B2E6C7B1A00F89E7C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				50B76D542E6C856300F89E7C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D182E6C7B1B00F89E7C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D222E6C7B1B00F89E7C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		503F3DAB2E68F099009009D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		503F3DB52E68F099009009D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D092E6C7B1A00F89E7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D162E6C7B1B00F89E7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50B76D202E6C7B1B00F89E7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		50B76D1C2E6C7B1B00F89E7C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B76D0C2E6C7B1A00F89E7C /* superhoarse */;
+			targetProxy = 50B76D1B2E6C7B1B00F89E7C /* PBXContainerItemProxy */;
+		};
+		50B76D262E6C7B1B00F89E7C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B76D0C2E6C7B1A00F89E7C /* superhoarse */;
+			targetProxy = 50B76D252E6C7B1B00F89E7C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		503F3DC12E68F099009009D3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		503F3DC22E68F099009009D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		503F3DC72E68F099009009D3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/superhoarse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/superhoarse";
+			};
+			name = Debug;
+		};
+		503F3DC82E68F099009009D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/superhoarse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/superhoarse";
+			};
+			name = Release;
+		};
+		503F3DCA2E68F099009009D3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = superhoarse;
+			};
+			name = Debug;
+		};
+		503F3DCB2E68F099009009D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = superhoarse;
+			};
+			name = Release;
+		};
+		50B76D2D2E6C7B1B00F89E7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = superhoarse.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "You need to use the microphone to dictate you silly goose";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarse;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		50B76D2E2E6C7B1B00F89E7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = superhoarseRelease.entitlements;
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: Maxwell Heiber (VC965E4DWA)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "You need to use the microphone to dictate you silly goose";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ink.maxheiber.superhoarse;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		50B76D302E6C7B1B00F89E7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/superhoarse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/superhoarse";
+			};
+			name = Debug;
+		};
+		50B76D312E6C7B1B00F89E7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/superhoarse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/superhoarse";
+			};
+			name = Release;
+		};
+		50B76D332E6C7B1B00F89E7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = superhoarse;
+			};
+			name = Debug;
+		};
+		50B76D342E6C7B1B00F89E7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VC965E4DWA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxheiber.superhoarseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = superhoarse;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		503F3D9C2E68F098009009D3 /* Build configuration list for PBXProject "superhoarse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				503F3DC12E68F099009009D3 /* Debug */,
+				503F3DC22E68F099009009D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		503F3DC62E68F099009009D3 /* Build configuration list for PBXNativeTarget "superhoarseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				503F3DC72E68F099009009D3 /* Debug */,
+				503F3DC82E68F099009009D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		503F3DC92E68F099009009D3 /* Build configuration list for PBXNativeTarget "superhoarseUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				503F3DCA2E68F099009009D3 /* Debug */,
+				503F3DCB2E68F099009009D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B76D2C2E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarse" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B76D2D2E6C7B1B00F89E7C /* Debug */,
+				50B76D2E2E6C7B1B00F89E7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B76D2F2E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B76D302E6C7B1B00F89E7C /* Debug */,
+				50B76D312E6C7B1B00F89E7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		50B76D322E6C7B1B00F89E7C /* Build configuration list for PBXNativeTarget "superhoarseUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50B76D332E6C7B1B00F89E7C /* Debug */,
+				50B76D342E6C7B1B00F89E7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		503F3E3F2E68F3F4009009D3 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.2.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		50B76D4E2E6C7DC000F89E7C /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 503F3E3F2E68F3F4009009D3 /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 503F3D992E68F098009009D3 /* Project object */;
+}
