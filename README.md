@@ -30,33 +30,9 @@ And configuring:
 
 ## Installation
 
-### Option 1: Build from Source
+Prod: App Store (coming soon)
+Development (human-only, requires sudo for copying to Applications folder): `make install`
 
-```bash
-# Clone the repository
-git clone <repository-url>
-cd Superhoarse
-
-# Build and install
-make build
-make install
-```
-
-### Option 2: Manual Build
-
-```bash
-# Build with Swift Package Manager
-swift build -c release
-
-# Create app bundle manually
-mkdir -p Superhoarse.app/Contents/MacOS
-mkdir -p Superhoarse.app/Contents/Resources
-cp .build/release/Superhoarse Superhoarse.app/Contents/MacOS/
-cp Sources/Info.plist Superhoarse.app/Contents/
-
-# Move to Applications
-cp -R Superhoarse.app /Applications/
-```
 
 ## Usage
 
@@ -68,6 +44,8 @@ cp -R Superhoarse.app /Applications/
 4. **Speak clearly** - The recording indicator will show in the app
 5. **Stop recording** - Press `⌘⇧Space` again
 6. **Get results** - Transcribed text appears where your cursor was
+
+> see ./user_flows.md for development-focused details about user interactions. 
 
 ## Architecture
 
@@ -158,13 +136,23 @@ All written by Claude. Hey Claude:
 4. **Performance matters** - Optimize for Apple Silicon architecture
 5. **Test** both manually and with automated tests.
     - `swift test`. Try to keep tests at a high level and from the user's point of view, avoiding testing implementation details.
-    - ./test_e2e.sh turns speakers on and actually talks and runs superhoarse.
     - Manual(ish) testing. User flows are in ./user_flows.md
 
+## Key commands for both AI and humans
+
+> We have both a Swift build (fast, not as realistic for app store) and an Xcode build (slower, closer to what we distribute). 
+
+- `swift test` to test. USE THIS FREQUENTLY DURING DEVELOPMENT
+- `./test_e2e.sh` for an end-to-end test that actually turns on the speakers and listens
+- `./test_e2_xcode.sh` e2e test for the xcode build
+
+## Human-only commands
+
+- `make install` to build, copy to Applications folder, and start the app. Requires `sudo`
 
 ## License
 
-MIT License - see LICENSE file for details
+Closed-source Software we build for *money*
 
 ## Credits
 
