@@ -1,0 +1,186 @@
+# User Flows - Test Plan
+
+## 1. First Launch & Accessibility Permission Flow
+
+### Setup
+- Fresh install or revoke accessibility permissions in System Preferences
+- Launch app
+
+### Expected Behavior
+1. App launches as menu bar app (no Dock icon)
+2. Settings window opens automatically
+3. Menu bar icon shows ⚠️ "OPEN SETTINGS" (orange text)
+4. Settings window displays permission request UI
+
+### Grant Permission Flow
+1. Click "Grant Accessibility Permission" in settings
+2. System Preferences opens to Privacy & Security > Accessibility
+3. Toggle app permission ON
+4. Return to app - permission status updates automatically (2s polling)
+5. Menu bar icon changes to ⚡ "OPEN SETTINGS" (purple text)
+6. Settings window can be closed manually
+
+### Subsequent Launches (With Permission)
+1. App launches as menu bar app
+2. Settings window does NOT open automatically
+3. Menu bar icon shows ⚡ "OPEN SETTINGS" (purple)
+
+## 2. Core Recording & Transcription Flow
+
+### Prerequisites
+- Accessibility permission granted
+- Microphone permission granted
+- Speech engine initialized (check status in settings)
+
+### Happy Path
+1. Press hotkey (default: ⌘⇧Space)
+2. Listening indicator appears (floating window, top of screen)
+3. Speak clearly for 1-3 seconds
+4. Release hotkey OR press again to stop
+5. Listening indicator disappears
+6. Text appears in focused application
+7. Text copied to clipboard automatically
+
+### Audio Level Feedback
+1. During recording, listening indicator shows real-time audio levels
+2. Visual feedback confirms microphone is capturing audio
+3. No audio = flat line, speaking = animated levels
+
+## 3. Hotkey Management Flow
+
+### Default Hotkey
+- ⌘⇧Space triggers recording
+- Works globally across all applications
+
+### Custom Hotkey Setup
+1. Open settings window
+2. Navigate to hotkey configuration section
+3. Select different modifier combination (⌘⌥, ⌘⌃, ⌥⇧)
+4. Select different key (R, T, M, V, Space)
+5. Hotkey updates immediately
+6. Test new combination works globally
+
+### Hotkey Display
+- Current hotkey shown in settings window
+- Format: ⌘⇧Space, ⌘⌥R, etc.
+
+## 4. Permission States & Fallbacks
+
+### No Accessibility Permission
+1. Record audio successfully
+2. Text transcribed but NOT inserted into app
+3. Paste notification window appears (center screen)
+4. Text available in clipboard for manual paste (⌘V)
+5. Notification dismisses after timeout or click
+
+### No Microphone Permission
+1. Hotkey pressed
+2. No listening indicator appears
+3. Recording fails silently
+4. No transcription occurs
+
+## 5. Menu Bar Interactions
+
+### Status Indicators
+- ⚡ Purple "OPEN SETTINGS" = has accessibility permission
+- ⚠️ Orange "OPEN SETTINGS" = missing accessibility permission
+
+### Menu Actions
+1. Click menu bar icon
+2. Menu shows: "OPEN SETTINGS", separator, "QUIT SUPERHOARSE"
+3. Click "OPEN SETTINGS" → opens settings window
+4. Click "QUIT SUPERHOARSE" → terminates app
+
+## 6. Recording Cancellation Flow
+
+### Escape Key Cancellation
+1. Start recording with hotkey
+2. Press Escape key during recording
+3. Recording stops immediately
+4. No transcription occurs
+5. Listening indicator disappears
+6. No text insertion or clipboard update
+
+### Manual Stop
+1. Start recording with hotkey
+2. Press hotkey again to stop
+3. Normal transcription flow continues
+
+## 7. Error Handling Flows
+
+### Short Audio (< 0.5s)
+1. Press hotkey briefly
+2. Release quickly (< 0.5 seconds)
+3. Recording captured but filtered out
+4. No transcription result
+5. No error shown to user
+
+### Silent Audio
+1. Press hotkey
+2. Don't speak (only background noise)
+3. Stop recording
+4. No transcription result
+5. No text insertion
+
+### Engine Initialization Failure
+1. Launch app
+2. Settings show "Engine not initialized" status
+3. Recording attempts fail silently
+4. Status updates when engine becomes available
+
+### Transcription Timeout
+1. Very long recording (> 30 seconds processing)
+2. Transcription times out
+3. No result returned
+4. User can attempt new recording
+
+## 8. Settings Window Management
+
+### Window Behavior
+1. Settings window can be opened/closed multiple times
+2. Window state persists (position, size within bounds)
+3. Window doesn't prevent app termination when closed
+4. Only one settings window instance at a time
+
+### Configuration Persistence
+1. Change hotkey settings
+2. Close and reopen app
+3. Settings preserved across sessions
+4. UserDefaults storage working correctly
+
+## 9. Speech Engine Management
+
+### Engine Status Check
+1. Open settings
+2. Check engine initialization status
+3. Status shows "Initialized" or "Not Initialized"
+4. Engine type displayed (currently: Parakeet)
+
+### Engine Switching (Future)
+- Currently only Parakeet engine available
+- Framework supports multiple engines
+- Settings UI prepared for engine selection
+
+## 10. Multi-App Text Insertion
+
+### Application Switching
+1. Focus different apps (TextEdit, Notes, Terminal, etc.)
+2. Use hotkey in each app
+3. Text inserts at cursor position in focused app
+4. Works across all applications that accept text input
+
+## Test Data Scenarios
+
+### Audio Content
+- Clear speech: "Hello world this is a test"
+- Numbers: "The year is 2024"
+- Punctuation: "Hello, world! How are you?"
+- Mixed case: "iPhone and MacBook"
+
+### Edge Cases
+- Very quiet speech
+- Background noise present
+- Multiple speakers
+- Non-English words
+- Technical terms
+

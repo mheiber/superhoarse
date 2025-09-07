@@ -165,15 +165,6 @@ make setup
 - **Apple Silicon optimized** - Will work on Intel Macs but slower
 - **General purpose accuracy** - Optimized for everyday speech, not specialized terminology
 
-## Roadmap
-
-- [ ] Support for additional languages
-- [ ] Configurable hotkey combinations
-- [ ] Custom wake words
-- [ ] Background app mode
-- [ ] Text formatting options
-- [ ] Export transcription history
-
 ## Contributing
 
 This project prioritizes simplicity and elegance. When contributing:
@@ -182,6 +173,7 @@ This project prioritizes simplicity and elegance. When contributing:
 2. **Minimal dependencies** - Only add dependencies that provide substantial value
 3. **Privacy first** - No features that compromise local-only processing
 4. **Performance matters** - Optimize for Apple Silicon architecture
+5. **Test** both manually and with automated tests. Flows are in ./user_flows.md
 
 ## License
 
