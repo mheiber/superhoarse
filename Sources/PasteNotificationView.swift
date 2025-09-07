@@ -62,38 +62,23 @@ struct PasteNotificationView: View {
             
             // Main message with synthwave styling
             VStack(spacing: 8) {
-                Text("TEXT COPIED TO CLIPBOARD")
-                    .font(.system(size: 16, weight: .heavy, design: .monospaced))
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(red: 1.0, green: 0.0, blue: 1.0),
-                                Color(red: 0.0, green: 1.0, blue: 0.5)
-                            ]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0), radius: 3)
-                    .tracking(1)
-                
-                Text("Press ⌘V to paste")
-                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                Text("⌘V")
+                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
                     .foregroundColor(.white.opacity(0.9))
             }
             
             
         }
-        .frame(minWidth: 400)
-        .padding(40)
+        .frame(minWidth: 300)
+        .padding(30)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(
                     LinearGradient(
                         gradient: Gradient(colors: [
-                            Color.black.opacity(0.15),
-                            Color(red: 0.1, green: 0.0, blue: 0.2).opacity(0.3),
-                            Color(red: 0.05, green: 0.0, blue: 0.15).opacity(0.4)
+                            Color.black.opacity(0.1),
+                            Color(red: 0.1, green: 0.0, blue: 0.2).opacity(0.2),
+                            Color(red: 0.05, green: 0.0, blue: 0.15).opacity(0.3)
                         ]),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -104,13 +89,13 @@ struct PasteNotificationView: View {
                         .stroke(
                             LinearGradient(
                                 gradient: Gradient(colors: [
-                                    Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6),
-                                    Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.6)
+                                    Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.4),
+                                    Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.4)
                                 ]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 2
+                            lineWidth: 1.5
                         )
                 )
                 .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.3), radius: 16)
