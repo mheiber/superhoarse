@@ -105,7 +105,7 @@ struct HeaderView: View {
                 .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0), radius: 8)
             
             // Subtitle
-            Text("AI-POWERED SPEECH RECOGNITION")
+            Text("AI-POWERED DICTATION")
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .foregroundColor(.white.opacity(0.7))
                 .tracking(2)
@@ -130,17 +130,11 @@ struct HeaderView: View {
                             )
                     )
                 
-                Text("TO RECORD")
+                Text("AND START TALKING")
                     .font(.system(size: 12, weight: .semibold, design: .monospaced))
                     .foregroundColor(.white.opacity(0.6))
             }
             .padding(.top, 4)
-                
-            // Engine status
-            Text("ENGINE: \(appState.currentSpeechEngine.displayName.uppercased())")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundColor(Color(red: 0.8, green: 0.0, blue: 1.0))
-                .padding(.top, 2)
         }
         .padding(.vertical, 12)
     }
@@ -188,13 +182,13 @@ struct RecordingStatusView: View {
                 
                 // Status text
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(appState.isRecording ? "RECORDING" : "READY")
+                    Text(appState.isRecording ? "LISTENING" : "READY")
                         .font(.system(size: 18, weight: .bold, design: .monospaced))
                         .foregroundColor(appState.isRecording ? 
                             Color(red: 1.0, green: 0.0, blue: 0.5) : 
                             Color(red: 0.0, green: 1.0, blue: 0.5))
                     
-                    Text(appState.isRecording ? "Listening for speech..." : "Press hotkey to start")
+                    Text(appState.isRecording ? "When you're done talking, press \(appState.getCurrentShortcutString()) to stop" : "Press \(appState.getCurrentShortcutString()) and start talking")
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
                         .foregroundColor(.white.opacity(0.6))
                 }
@@ -684,14 +678,22 @@ struct ListeningIndicatorView: View {
             WaveformVisualizerView(audioLevel: appState.currentAudioLevel)
             
             HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("ESC to cancel")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.black.opacity(0.7))
+                )
+                
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("\(appState.getCurrentShortcutString()) to stop")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                    
-                    Text("ESC to cancel")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
                 }
@@ -748,7 +750,7 @@ struct WaveformVisualizerView: View {
                     LinearGradient(
                         gradient: Gradient(colors: [
                             Color.black.opacity(0.15),
-                            Color(red: 0.1, green: 0.0, blue: 0.2).opacity(0.25)
+                            Color(red: 0.1, green: 0.0, blue: 0.2).opacity(0.8)
                         ]),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing

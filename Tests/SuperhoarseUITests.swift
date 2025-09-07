@@ -38,8 +38,9 @@ final class SuperhoarseUITests: XCTestCase {
         let statusText = appState.isRecording ? "RECORDING" : "READY"
         XCTAssertEqual(statusText, "READY", "User should see 'READY' status text when not recording")
         
-        let instructionText = appState.isRecording ? "Listening for speech..." : "Press hotkey to start"
-        XCTAssertEqual(instructionText, "Press hotkey to start", "User should see instruction to press hotkey")
+        let instructionText = appState.isRecording ? "Listening for speech..." : "Press \(appState.getCurrentShortcutString()) and start talking"
+        let instructionPattern = "Press .+ and start talking"
+        XCTAssertTrue(NSPredicate(format: "SELF MATCHES %@", instructionPattern).evaluate(with: instructionText), "User should see instruction to press hotkey and start talking")
     }
     
     // Test that user sees correct text labels when recording
@@ -56,8 +57,9 @@ final class SuperhoarseUITests: XCTestCase {
         let statusText = appState.isRecording ? "RECORDING" : "READY"
         XCTAssertEqual(statusText, "RECORDING", "User should see 'RECORDING' status text when recording")
         
-        let instructionText = appState.isRecording ? "Listening for speech..." : "Press hotkey to start"
-        XCTAssertEqual(instructionText, "Listening for speech...", "User should see listening instruction when recording")
+        let instructionText = appState.isRecording ? "When you're done talking, press \(appState.getCurrentShortcutString()) to stop" : "Press \(appState.getCurrentShortcutString()) and start talking"
+        let recordingInstructionPattern = "When you're done talking, press .+ to stop"
+        XCTAssertTrue(NSPredicate(format: "SELF MATCHES %@", recordingInstructionPattern).evaluate(with: instructionText), "User should see instruction when recording")
         
         // User should see visual feedback
         XCTAssertTrue(appState.showListeningIndicator, "User should see listening indicator")
