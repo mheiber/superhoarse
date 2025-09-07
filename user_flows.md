@@ -7,9 +7,9 @@
 - Launch app
 
 ### Expected Behavior
-1. App launches as menu bar app (no Dock icon)
-2. Settings window opens automatically
-3. Menu bar icon shows ⚠️ "OPEN SETTINGS" (orange text)
+1. App launches with dock visibility based on setting (default: shows in Dock)
+2. Settings window opens automatically if accessibility permissions not granted
+3. Menu bar icon shows ⚠️ "OPEN SETTINGS" (orange text) if no permissions
 4. Settings window displays permission request UI
 
 ### Grant Permission Flow
@@ -21,9 +21,10 @@
 6. Settings window can be closed manually
 
 ### Subsequent Launches (With Permission)
-1. App launches as menu bar app
+1. App launches with dock visibility based on setting
 2. Settings window does NOT open automatically
 3. Menu bar icon shows ⚡ "OPEN SETTINGS" (purple)
+4. If app shows in dock, clicking dock icon opens settings
 
 ## 2. Core Recording & Transcription Flow
 
@@ -168,6 +169,35 @@
 2. Use hotkey in each app
 3. Text inserts at cursor position in focused app
 4. Works across all applications that accept text input
+
+## 11. App Preferences Management
+
+### Launch at Startup Setting
+1. Open settings window
+2. Navigate to "APP PREFERENCES" section
+3. Toggle "LAUNCH AT STARTUP" (default: OFF)
+4. Setting persists across app restarts
+5. When enabled, user must manually add app to Login Items in System Preferences
+
+### Show in Dock Setting
+1. Open settings window
+2. Navigate to "APP PREFERENCES" section  
+3. Toggle "SHOW IN DOCK" (default: ON)
+4. App activation policy updates immediately
+5. When enabled:
+   - App icon appears in Dock
+   - Clicking dock icon opens settings window
+   - App behaves as regular application
+6. When disabled:
+   - App runs as menu bar only (accessory mode)
+   - No dock icon visible
+   - Only accessible via menu bar
+
+### Settings Window Behavior
+1. Settings window can be opened/closed without quitting app
+2. Closing settings window keeps app running in background
+3. Settings accessed via menu bar item or dock icon (if visible)
+4. All preference changes take effect immediately
 
 ## Test Data Scenarios
 

@@ -21,7 +21,8 @@ let package = Package(
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio")
             ],
-            path: "Sources"
+            path: "Sources",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "SuperhoarseTests",

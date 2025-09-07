@@ -19,6 +19,10 @@
     <key>CFBundleSignature</key>
     <string>SWLT</string>
     
+    <!-- App icon -->
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    
     <!-- Required for microphone access -->
     <key>NSMicrophoneUsageDescription</key>
     <string>Superhoarse needs microphone access to record and transcribe your speech.</string>

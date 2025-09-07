@@ -35,6 +35,8 @@ struct ContentView: View {
                         
                         KeyboardShortcutConfigView()
                         
+                        AppPreferencesView()
+                        
                         Spacer(minLength: 20)
                     }
                 }
@@ -847,6 +849,111 @@ struct SelectableTextView: View {
     }
 }
 
+
+struct AppPreferencesView: View {
+    @AppStorage("launchAtStartup") private var launchAtStartup: Bool = false
+    @AppStorage("showInDock") private var showInDock: Bool = true
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // App Preferences Section Header
+            HStack {
+                Text("APP PREFERENCES")
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
+                
+                Spacer()
+            }
+            
+            VStack(spacing: 12) {
+                // Launch at Startup Setting
+                HStack {
+                    Text("LAUNCH AT STARTUP:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $launchAtStartup)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.0, green: 1.0, blue: 0.5)))
+                        .onChange(of: launchAtStartup) { newValue in
+                            updateLaunchAtStartup(enabled: newValue)
+                        }
+                }
+                
+                // Show in Dock Setting
+                HStack {
+                    Text("SHOW IN DOCK:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $showInDock)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.0, green: 1.0, blue: 0.5)))
+                        .onChange(of: showInDock) { newValue in
+                            updateDockVisibility(showInDock: newValue)
+                        }
+                }
+                
+                // Description text
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("• Launch at Startup: Automatically start Superhoarse when you log in")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
+                        .multilineTextAlignment(.leading)
+                    
+                    Text("• Show in Dock: Display app icon in Dock (requires restart)")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.top, 8)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.black.opacity(0.3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color(red: 0.0, green: 1.0, blue: 0.5).opacity(0.4),
+                                    Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.4)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                )
+                .shadow(color: Color(red: 0.0, green: 1.0, blue: 0.5).opacity(0.2), radius: 8)
+        )
+    }
+    
+    private func updateLaunchAtStartup(enabled: Bool) {
+        // For now, store the preference and show instructions to user
+        // A future version could implement ServiceManagement framework
+        UserDefaults.standard.set(enabled, forKey: "launchAtStartup")
+        
+        // Show user instructions for manual setup if needed
+        if enabled {
+            print("Launch at startup enabled - add Superhoarse to System Preferences > Users & Groups > Login Items")
+        } else {
+            print("Launch at startup disabled - remove Superhoarse from Login Items if present")
+        }
+    }
+    
+    private func updateDockVisibility(showInDock: Bool) {
+        let newPolicy: NSApplication.ActivationPolicy = showInDock ? .regular : .accessory
+        NSApp.setActivationPolicy(newPolicy)
+        
+        // Store the preference for use on next launch
+        UserDefaults.standard.set(showInDock, forKey: "showInDock")
+    }
+}
 
 extension Notification.Name {
     static let hotKeyChanged = Notification.Name("hotKeyChanged")

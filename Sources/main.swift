@@ -29,8 +29,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // COVERAGE_EXCLUDE_START - App delegate lifecycle methods require full app launch to test
-        // Set activation policy to .accessory to run as a menu bar app (no Dock icon).
-        NSApp.setActivationPolicy(.accessory)
+        // Set activation policy based on user preference (default: show in dock)
+        let showInDock = UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true
+        let activationPolicy: NSApplication.ActivationPolicy = showInDock ? .regular : .accessory
+        NSApp.setActivationPolicy(activationPolicy)
         
         setupMenuBar()
         
@@ -57,6 +59,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // COVERAGE_EXCLUDE_START - App delegate lifecycle methods require full app to test
     // Keep the app running even when the settings window is closed.
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool {
+        return false
+    }
+    
+    // Handle dock icon clicks when app is visible in dock
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // When dock icon is clicked, open settings window
+        openSettings()
         return false
     }
     // COVERAGE_EXCLUDE_END
