@@ -273,7 +273,7 @@ struct AccessibilityPermissionView: View {
                     .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.0))
                     .multilineTextAlignment(.center)
                 
-                Text("Text insertion requires accessibility permission.\nTranscriptions will still be copied to clipboard.")
+                Text("The app won't be able to insert text until permissions are granted.\nTranscriptions will still be copied to clipboard.")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
