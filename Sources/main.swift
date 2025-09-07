@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import Combine
 import os.log
+import ApplicationServices
 
 // Using Settings {} defines the app as a menu bar application.
 // This ensures a single, consistent process, fixing the accessibility permission issue.
@@ -18,6 +19,7 @@ struct SuperhoarseApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
+    private var settingsMenuItem: NSMenuItem?
     private var settingsWindow: NSWindow?
     private var listeningIndicatorWindow: NSWindow?
     private var pasteNotificationWindow: NSWindow?
@@ -36,8 +38,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appState = AppState.shared
         setupAppStateListeners()
         
-        // Open settings on launch  
-        openSettings()
+        // Check accessibility permissions directly to avoid timing issues
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+        let hasPermission = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        
+        // Set initial menu item text based on current permission state
+        updateMenuBarIcon(hasPermission: hasPermission)
+        
+        // Open settings on launch only if accessibility permissions are not granted
+        if !hasPermission {
+            openSettings()
+        }
         
         logger.info("Superhoarse launched successfully as a menu bar app.")
         // COVERAGE_EXCLUDE_END
@@ -70,15 +81,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Style the menu with dark background
         menu.appearance = NSAppearance(named: .darkAqua)
         
-        // Create menu items with synthwave styling
-        let settingsItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
-        settingsItem.attributedTitle = NSAttributedString(
-            string: "⚡ OPEN SETTINGS",
-            attributes: [
-                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
-                .foregroundColor: NSColor.systemPurple
-            ]
-        )
+        // Create menu items with synthwave styling - will be updated based on permissions
+        settingsMenuItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
+        // Initial text will be set by updateMenuBarIcon
         
         let separatorItem = NSMenuItem.separator()
         
@@ -91,7 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ]
         )
         
-        menu.addItem(settingsItem)
+        menu.addItem(settingsMenuItem!)
         menu.addItem(separatorItem)
         menu.addItem(quitItem)
         
@@ -148,7 +153,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.togglePasteNotification(show)
             }
             .store(in: &cancellables)
+        
+        appState.$hasAccessibilityPermission
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hasPermission in
+                self?.updateMenuBarIcon(hasPermission: hasPermission)
+            }
+            .store(in: &cancellables)
     }
+    
+    // COVERAGE_EXCLUDE_START - Menu bar icon updates require running macOS app to test
+    private func updateMenuBarIcon(hasPermission: Bool) {
+        // Update settings menu item based on permission status
+        if hasPermission {
+            // Update settings menu item with lightning bolt
+            settingsMenuItem?.attributedTitle = NSAttributedString(
+                string: "⚡ OPEN SETTINGS",
+                attributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
+                    .foregroundColor: NSColor.systemPurple
+                ]
+            )
+        } else {
+            // Update settings menu item with caution icon
+            settingsMenuItem?.attributedTitle = NSAttributedString(
+                string: "⚠️ OPEN SETTINGS",
+                attributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .bold),
+                    .foregroundColor: NSColor.systemOrange
+                ]
+            )
+        }
+        
+        logger.info("Settings menu item updated - hasPermission: \(hasPermission)")
+    }
+    // COVERAGE_EXCLUDE_END
     
     // COVERAGE_EXCLUDE_START - UI indicator management requires running app with windows
     private func toggleListeningIndicator(_ show: Bool) {
