@@ -108,13 +108,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let hostingController = NSHostingController(rootView: contentView)
             
             settingsWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 700, height: 900),
+                contentRect: NSRect(x: 0, y: 0, width: 700, height: 1400),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
             )
-            settingsWindow?.minSize = NSSize(width: 600, height: 500)
-            settingsWindow?.maxSize = NSSize(width: 1000, height: 1200)
+            settingsWindow?.minSize = NSSize(width: 600, height: 800)
+            settingsWindow?.maxSize = NSSize(width: 1000, height: 1600)
             settingsWindow?.title = "Superhoarse Settings"
             settingsWindow?.contentViewController = hostingController
             settingsWindow?.center()
