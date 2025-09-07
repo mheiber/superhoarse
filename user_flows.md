@@ -26,6 +26,15 @@
 3. Menu bar icon shows ⚡ "OPEN SETTINGS" (purple)
 4. If app shows in dock, clicking dock icon opens settings
 
+### Permission Revocation Flow
+1. User manually revokes accessibility permissions in System Preferences (Privacy & Security > Accessibility)
+2. Within 2 seconds, app detects permission loss via continuous monitoring
+3. Menu bar icon changes from ⚡ purple to ⚠️ orange "OPEN SETTINGS"
+4. Settings window automatically shows permission request UI if open
+5. AccessibilityPermissionView appears with "GRANT PERMISSION" button
+6. User can click "Grant Permission" to restore permissions
+7. Behavior is identical to first launch without permissions
+
 ## 2. Core Recording & Transcription Flow
 
 ### Prerequisites
@@ -66,6 +75,13 @@
 - Format: ⌘⇧Space, ⌘⌥R, etc.
 
 ## 4. Permission States & Fallbacks
+
+### Continuous Permission Monitoring
+1. App monitors accessibility permissions every 2 seconds throughout its lifecycle
+2. Permission changes are detected automatically (grant/revoke)
+3. UI updates immediately when permissions change
+4. Menu bar icon reflects current permission state in real-time
+5. No user action required to detect permission changes
 
 ### No Accessibility Permission
 1. Record audio successfully
@@ -213,4 +229,31 @@
 - Multiple speakers
 - Non-English words
 - Technical terms
+
+## 12. Permission Revocation Testing
+
+### Test Scenario: Grant and Revoke Permissions
+1. **Initial State**: Launch app without accessibility permissions
+2. **Grant Permission**: 
+   - Verify ⚠️ orange menu bar icon and permission request UI appears
+   - Click "Grant Permission" button
+   - Grant permission in System Preferences
+   - Verify ⚡ purple menu bar icon and UI updates within 2 seconds
+3. **Revoke Permission**:
+   - Go to System Preferences > Privacy & Security > Accessibility
+   - Toggle app permission OFF
+   - Return to app and wait up to 2 seconds
+   - Verify ⚡ purple menu bar icon changes to ⚠️ orange
+   - Verify permission request UI reappears (identical to initial state)
+4. **Re-grant Permission**:
+   - Click "Grant Permission" button again
+   - Toggle app permission ON in System Preferences
+   - Verify app returns to granted permission state
+   - Verify functionality works normally
+
+### Critical Test Points
+- Permission state detection happens automatically within 2 seconds
+- UI is identical whether permissions were never granted or were revoked
+- No difference in behavior between fresh install and revoked permissions
+- Menu bar icon accurately reflects current permission state at all times
 
