@@ -212,13 +212,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPasteNotification() {
         guard let appState = appState else { return }
         
+        // Don't show popup if settings window is focused
+        if let settingsWindow = settingsWindow, settingsWindow.isKeyWindow {
+            logger.info("Settings window is focused, not showing paste notification")
+            return
+        }
+        
         // Always recreate the window with fresh content
         let notificationView = PasteNotificationView(transcribedText: appState.transcriptionText)
             .environmentObject(appState)
         let hostingController = NSHostingController(rootView: notificationView)
         
         pasteNotificationWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 320),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false

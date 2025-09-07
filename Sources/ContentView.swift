@@ -149,53 +149,101 @@ struct RecordingStatusView: View {
     @State private var pulseAnimation: Bool = false
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Status indicator
-            ZStack {
-                Circle()
-                    .fill(appState.isRecording ? 
-                        Color(red: 1.0, green: 0.0, blue: 0.5) : 
-                        Color.white.opacity(0.3))
-                    .frame(width: 16, height: 16)
-                    .scaleEffect(appState.isRecording ? (pulseAnimation ? 1.3 : 1.0) : 1.0)
-                    .shadow(color: appState.isRecording ? 
-                        Color(red: 1.0, green: 0.0, blue: 0.5) : 
-                        Color.white.opacity(0.5), 
-                        radius: appState.isRecording ? 8 : 4)
-                    .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: pulseAnimation)
-                    .onAppear {
-                        if appState.isRecording {
-                            pulseAnimation = true
-                        }
-                    }
-                    .onChange(of: appState.isRecording) { isRecording in
-                        pulseAnimation = isRecording
-                    }
-                
-                if appState.isRecording {
+        VStack(spacing: 12) {
+            // Main status section
+            HStack(spacing: 16) {
+                // Status indicator
+                ZStack {
                     Circle()
-                        .stroke(Color(red: 1.0, green: 0.0, blue: 0.5).opacity(0.4), lineWidth: 2)
-                        .frame(width: 24, height: 24)
-                        .scaleEffect(pulseAnimation ? 1.5 : 1.0)
-                        .opacity(pulseAnimation ? 0 : 1)
-                        .animation(.easeOut(duration: 1.0).repeatForever(autoreverses: false), value: pulseAnimation)
+                        .fill(appState.isRecording ? 
+                            Color(red: 1.0, green: 0.0, blue: 0.5) : 
+                            Color.white.opacity(0.3))
+                        .frame(width: 16, height: 16)
+                        .scaleEffect(appState.isRecording ? (pulseAnimation ? 1.3 : 1.0) : 1.0)
+                        .shadow(color: appState.isRecording ? 
+                            Color(red: 1.0, green: 0.0, blue: 0.5) : 
+                            Color.white.opacity(0.5), 
+                            radius: appState.isRecording ? 8 : 4)
+                        .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: pulseAnimation)
+                        .onAppear {
+                            if appState.isRecording {
+                                pulseAnimation = true
+                            }
+                        }
+                        .onChange(of: appState.isRecording) { isRecording in
+                            pulseAnimation = isRecording
+                        }
+                    
+                    if appState.isRecording {
+                        Circle()
+                            .stroke(Color(red: 1.0, green: 0.0, blue: 0.5).opacity(0.4), lineWidth: 2)
+                            .frame(width: 24, height: 24)
+                            .scaleEffect(pulseAnimation ? 1.5 : 1.0)
+                            .opacity(pulseAnimation ? 0 : 1)
+                            .animation(.easeOut(duration: 1.0).repeatForever(autoreverses: false), value: pulseAnimation)
+                    }
                 }
-            }
-            
-            // Status text
-            VStack(alignment: .leading, spacing: 4) {
-                Text(appState.isRecording ? "RECORDING" : "READY")
-                    .font(.system(size: 18, weight: .bold, design: .monospaced))
-                    .foregroundColor(appState.isRecording ? 
-                        Color(red: 1.0, green: 0.0, blue: 0.5) : 
-                        Color(red: 0.0, green: 1.0, blue: 0.5))
                 
-                Text(appState.isRecording ? "Listening for speech..." : "Press hotkey to start")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.6))
+                // Status text
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(appState.isRecording ? "RECORDING" : "READY")
+                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                        .foregroundColor(appState.isRecording ? 
+                            Color(red: 1.0, green: 0.0, blue: 0.5) : 
+                            Color(red: 0.0, green: 1.0, blue: 0.5))
+                    
+                    Text(appState.isRecording ? "Listening for speech..." : "Press hotkey to start")
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                
+                Spacer()
             }
             
-            Spacer()
+            // Live transcription display when not recording but text is available
+            if !appState.isRecording && !appState.transcriptionText.isEmpty {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("LAST TRANSCRIPTION:")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.6))
+                            .tracking(1)
+                        
+                        Spacer()
+                        
+                        Text("COPIED TO CLIPBOARD")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
+                            .tracking(0.5)
+                    }
+                    
+                    ScrollView {
+                        SelectableTextView(text: appState.transcriptionText)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                    }
+                    .frame(maxHeight: 100)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.black.opacity(0.4))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color(red: 0.0, green: 1.0, blue: 0.5).opacity(0.3),
+                                                Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.3)
+                                            ]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                    )
+                }
+                .padding(.top, 4)
+            }
         }
         .padding(16)
         .background(
@@ -769,6 +817,33 @@ struct WaveformVisualizerView: View {
             let minHeight: Float = audioLevel < 0.01 ? 0.02 : 0.1
             waveformBars[i] = max(minHeight, min(1.0, heightMultiplier))
         }
+    }
+}
+
+struct SelectableTextView: View {
+    let text: String
+    @State private var displayText: String = ""
+    
+    var body: some View {
+        TextEditor(text: $displayText)
+            .font(.system(size: 13, weight: .medium, design: .monospaced))
+            .foregroundColor(Color(red: 0.8, green: 0.8, blue: 1.0))
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onAppear {
+                displayText = text
+            }
+            .onChange(of: text) { newValue in
+                displayText = newValue
+            }
+            .onChange(of: displayText) { newValue in
+                // Prevent editing by reverting any changes back to original text
+                if newValue != text {
+                    displayText = text
+                }
+            }
     }
 }
 

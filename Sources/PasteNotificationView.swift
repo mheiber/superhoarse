@@ -13,7 +13,7 @@ struct PasteNotificationView: View {
     let transcribedText: String
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             // Animated clipboard icon with synthwave glow
             ZStack {
                 // Background glow rings
@@ -82,87 +82,10 @@ struct PasteNotificationView: View {
                     .foregroundColor(.white.opacity(0.9))
             }
             
-            // Command V visualization with neon effect
-            HStack(spacing: 12) {
-                // Command key
-                VStack(spacing: 4) {
-                    Text("⌘")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(red: 0.0, green: 0.8, blue: 1.0))
-                        .shadow(color: Color(red: 0.0, green: 0.8, blue: 1.0), radius: 6)
-                    
-                    Text("CMD")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.black.opacity(0.6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color(red: 0.0, green: 0.8, blue: 1.0).opacity(glowIntensity), lineWidth: 2)
-                        )
-                        .shadow(color: Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.4), radius: 8)
-                )
-                
-                // Plus symbol
-                Text("+")
-                    .font(.system(size: 20, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.8))
-                
-                // V key
-                VStack(spacing: 4) {
-                    Text("V")
-                        .font(.system(size: 24, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                        .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0), radius: 6)
-                    
-                    Text("PASTE")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.black.opacity(0.6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(glowIntensity), lineWidth: 2)
-                        )
-                        .shadow(color: Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.4), radius: 8)
-                )
-            }
             
-            // Preview of transcribed text (truncated)
-            if !transcribedText.isEmpty {
-                VStack(spacing: 6) {
-                    Text("TRANSCRIBED:")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.6))
-                        .tracking(1)
-                    
-                    Text(transcribedText.count > 60 ? String(transcribedText.prefix(60)) + "..." : transcribedText)
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(Color(red: 0.8, green: 0.8, blue: 1.0))
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.black.opacity(0.4))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                )
-                        )
-                }
-            }
         }
-        .padding(24)
+        .frame(minWidth: 400)
+        .padding(40)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(
@@ -203,8 +126,8 @@ struct PasteNotificationView: View {
             floatAnimation = true
             startGlowAnimation()
             
-            // Auto-dismiss after 4 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            // Auto-dismiss after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 dismissNotification()
             }
         }
