@@ -22,6 +22,7 @@ install: build
 	mkdir -p Superhoarse.app/Contents/Resources
 	cp .build/release/Superhoarse Superhoarse.app/Contents/MacOS/
 	cp Info.plist Superhoarse.app/Contents/
+	cp -R Sources/Resources/* Superhoarse.app/Contents/Resources/
 	@echo "Setting proper permissions..."
 	chmod +x Superhoarse.app/Contents/MacOS/Superhoarse
 	@echo "Removing existing installation..."
