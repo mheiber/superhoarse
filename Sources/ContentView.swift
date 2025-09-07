@@ -684,17 +684,23 @@ struct ListeningIndicatorView: View {
             WaveformVisualizerView(audioLevel: appState.currentAudioLevel)
             
             HStack {
-                Text("\(appState.getCurrentShortcutString()) to stop")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white.opacity(0.9))
-                
                 Spacer()
                 
-                Text("ESC to cancel")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white.opacity(0.9))
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("\(appState.getCurrentShortcutString()) to stop")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                    
+                    Text("ESC to cancel")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.black.opacity(0.7))
+                )
             }
         }
         .padding()
