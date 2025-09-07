@@ -36,7 +36,10 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
         // User should be able to see their hotkey configuration
         let hotkeyString = appState.getCurrentShortcutString()
         XCTAssertFalse(hotkeyString.isEmpty, "User should see their hotkey configuration")
-        XCTAssertTrue(hotkeyString.contains("⌘"), "Hotkey should show Command key for user")
+        // Test that hotkey contains any valid modifier (default is ⌥, not ⌘)
+        let validModifiers = ["⌘", "⇧", "⌥", "⌃"]
+        let hasValidModifier = validModifiers.contains { hotkeyString.contains($0) }
+        XCTAssertTrue(hasValidModifier, "Hotkey should show valid modifier key for user")
     }
     
     // Test user workflow: User clicks record button and sees immediate feedback

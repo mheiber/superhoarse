@@ -18,9 +18,11 @@ public class BundledAsrModels {
     /// Load bundled ASR models from the app bundle
     public static func loadBundledModels() throws -> AsrModels {
         logger.info("Loading bundled ASR models from app bundle")
-        
+
+        let bundle = bundleForResources()
+
         // Debug: List all resources in bundle
-        if let resourcePath = Bundle.main.resourcePath {
+        if let resourcePath = bundle.resourcePath {
             logger.info("Bundle resource path: \(resourcePath)")
             if let contents = try? FileManager.default.contentsOfDirectory(atPath: resourcePath) {
                 logger.info("Bundle contents: \(contents)")
@@ -28,11 +30,11 @@ public class BundledAsrModels {
         }
         
         // Get model URLs from bundle
-        let melURL = Bundle.main.url(forResource: "Melspectogram", withExtension: "mlmodelc")
-        let encoderURL = Bundle.main.url(forResource: "ParakeetEncoder_v2", withExtension: "mlmodelc")
-        let decoderURL = Bundle.main.url(forResource: "ParakeetDecoder", withExtension: "mlmodelc")
-        let jointURL = Bundle.main.url(forResource: "RNNTJoint", withExtension: "mlmodelc")
-        let vocabURL = Bundle.main.url(forResource: "parakeet_vocab", withExtension: "json")
+        let melURL = bundle.url(forResource: "Melspectogram", withExtension: "mlmodelc")
+        let encoderURL = bundle.url(forResource: "ParakeetEncoder_v2", withExtension: "mlmodelc")
+        let decoderURL = bundle.url(forResource: "ParakeetDecoder", withExtension: "mlmodelc")
+        let jointURL = bundle.url(forResource: "RNNTJoint", withExtension: "mlmodelc")
+        let vocabURL = bundle.url(forResource: "parakeet_vocab", withExtension: "json")
         
         logger.info("Model URLs found:")
         logger.info("  melURL: \(melURL?.path ?? "nil")")
@@ -90,6 +92,17 @@ public class BundledAsrModels {
         )
     }
     
+    /// Get the appropriate bundle for resources, handling both SwiftPM and Xcode builds
+    private static func bundleForResources() -> Bundle {
+        // Try Bundle.module first (SwiftPM)
+        #if SWIFT_PACKAGE
+        return Bundle.module
+        #else
+        // Fallback to Bundle.main (Xcode)
+        return Bundle.main
+        #endif
+    }
+    
     /// Create optimized configuration for different model types
     private static func optimizedConfiguration(for modelType: ANEOptimizer.ModelType) -> MLModelConfiguration {
         let config = MLModelConfiguration()
@@ -100,6 +113,7 @@ public class BundledAsrModels {
     
     /// Check if all required models exist in the bundle
     public static func bundledModelsExist() -> Bool {
+        let bundle = bundleForResources()
         let modelNames = [
             "Melspectogram.mlmodelc",
             "ParakeetEncoder_v2.mlmodelc", 
@@ -112,7 +126,7 @@ public class BundledAsrModels {
             let resourceName = String(modelName.dropLast(modelName.hasSuffix(".mlmodelc") ? 9 : 5))
             let ext = modelName.hasSuffix(".mlmodelc") ? "mlmodelc" : "json"
             
-            if Bundle.main.url(forResource: resourceName, withExtension: ext) == nil {
+            if bundle.url(forResource: resourceName, withExtension: ext) == nil {
                 logger.warning("Missing bundled model: \(modelName)")
                 return false
             }

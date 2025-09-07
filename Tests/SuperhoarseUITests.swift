@@ -106,7 +106,10 @@ final class SuperhoarseUITests: XCTestCase {
         let hotkeyString = appState.getCurrentShortcutString()
         
         XCTAssertFalse(hotkeyString.isEmpty, "User should see their hotkey string")
-        XCTAssertTrue(hotkeyString.contains("⌘"), "Hotkey should show Command key symbol")
+        // Test that hotkey contains any valid modifier symbols (default is ⌥)
+        let validModifiers = ["⌘", "⇧", "⌥", "⌃"]
+        let hasValidModifier = validModifiers.contains { hotkeyString.contains($0) }
+        XCTAssertTrue(hasValidModifier, "Hotkey should show valid modifier key symbol")
         
         // Test that hotkey contains recognizable modifier symbols that user would see
         let expectedModifiers = ["⌘", "⇧", "⌥", "⌃"]

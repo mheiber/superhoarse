@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let activationPolicy: NSApplication.ActivationPolicy = showInDock ? .regular : .accessory
         NSApp.setActivationPolicy(activationPolicy)
         
+        
         setupMenuBar()
         
         // Initialize the shared AppState and set up listeners.
@@ -65,6 +66,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Handle dock icon clicks when app is visible in dock
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         // When dock icon is clicked, open settings window
+        openSettings()
+        return false
+    }
+    
+    // Prevent new instances when app is already running
+    func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
+        // Instead of creating a new file, show settings
         openSettings()
         return false
     }

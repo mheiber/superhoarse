@@ -153,10 +153,13 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         // User should be able to see their current hotkey
         let shortcutString = appState.getCurrentShortcutString()
         XCTAssertFalse(shortcutString.isEmpty, "User should see their hotkey shortcut")
-        XCTAssertTrue(shortcutString.contains("⌘"), "Hotkey should include command key")
+        // Test that hotkey contains any valid modifier (default is ⌥, not ⌘)
+        let validModifiers = ["⌘", "⇧", "⌥", "⌃"]
+        let hasValidModifier = validModifiers.contains { shortcutString.contains($0) }
+        XCTAssertTrue(hasValidModifier, "Hotkey should include valid modifier key")
         
         // Hotkey string should be meaningful to user
-        let expectedPatterns = ["Space", "⌘⇧", "⌘⌥", "⌘⌃", "⌥⇧"]
+        let expectedPatterns = ["Space", "⌘⇧", "⌘⌥", "⌘⌃", "⌥⇧", "⌥"]
         let hasExpectedPattern = expectedPatterns.contains { shortcutString.contains($0) }
         XCTAssertTrue(hasExpectedPattern, "Hotkey should contain recognizable key combinations")
     }
@@ -554,7 +557,10 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         // User can see their hotkey preference
         let hotkey = appState.getCurrentShortcutString()
         XCTAssertFalse(hotkey.isEmpty, "User should see hotkey")
-        XCTAssertTrue(hotkey.contains("⌘"), "Should include command key")
+        // Test that hotkey contains any valid modifier (default is ⌥, not ⌘)
+        let validModifiers = ["⌘", "⇧", "⌥", "⌃"]
+        let hasValidModifier = validModifiers.contains { hotkey.contains($0) }
+        XCTAssertTrue(hasValidModifier, "Should include valid modifier key")
         
         // User can manually hide listening indicator
         appState.showListeningIndicator = true
