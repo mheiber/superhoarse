@@ -122,6 +122,10 @@ class AppState: ObservableObject {
         updateAccessibilityPermission()
         setupHotKeyManager()
         setupAudioRecorder()
+        
+        // Start continuous permission monitoring to detect grant/revoke changes
+        startPermissionMonitoring()
+        
         Task {
             logger.info("Starting speech recognizer setup task...")
             await setupSpeechRecognizer()
@@ -372,22 +376,19 @@ class AppState: ObservableObject {
             
             DispatchQueue.main.async {
                 let wasPermissionGranted = !self.hasAccessibilityPermission && trusted
+                let wasPermissionRevoked = self.hasAccessibilityPermission && !trusted
                 self.hasAccessibilityPermission = trusted
                 
-                // Stop monitoring once permission is granted
-                if trusted {
-                    self.stopPermissionMonitoring()
-                    if wasPermissionGranted {
-                        self.logger.info("Accessibility permission granted - monitoring stopped")
-                    }
+                if wasPermissionGranted {
+                    self.logger.info("Accessibility permission granted")
+                } else if wasPermissionRevoked {
+                    self.logger.info("Accessibility permission revoked - will continue monitoring")
                 }
             }
         }
         
-        // Stop monitoring after 5 minutes to prevent indefinite polling
-        DispatchQueue.main.asyncAfter(deadline: .now() + 300) {
-            self.stopPermissionMonitoring()
-        }
+        // Continue monitoring indefinitely to detect permission changes
+        // No automatic timeout - monitoring continues throughout app lifecycle
     }
     
     func stopPermissionMonitoring() {

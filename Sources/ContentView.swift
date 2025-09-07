@@ -33,9 +33,9 @@ struct ContentView: View {
                         
                         RecordingStatusView()
                         
-                        KeyboardShortcutConfigView()
-                        
                         AppPreferencesView()
+                        
+                        KeyboardShortcutConfigView()
                         
                         Spacer(minLength: 20)
                     }
@@ -895,20 +895,6 @@ struct AppPreferencesView: View {
                             updateDockVisibility(showInDock: newValue)
                         }
                 }
-                
-                // Description text
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("• Launch at Startup: Automatically start Superhoarse when you log in")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
-                        .multilineTextAlignment(.leading)
-                    
-                    Text("• Show in Dock: Display app icon in Dock (requires restart)")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(.top, 8)
             }
         }
         .padding(16)

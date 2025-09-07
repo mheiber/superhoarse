@@ -91,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.appearance = NSAppearance(named: .darkAqua)
         
         // Create menu items with synthwave styling - will be updated based on permissions
-        settingsMenuItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: ",")
+        settingsMenuItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: "")
         // Initial text will be set by updateMenuBarIcon
         
         let separatorItem = NSMenuItem.separator()
