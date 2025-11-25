@@ -1,8 +1,10 @@
+> Code quality warning: 90% vibecoded
+
 # Superhoarse
 
 A lightweight, privacy-focused voice-to-text app for macOS. Built with Swift and powered by the Parakeet engine for fast, local speech recognition.
 
-- 98% vibecoded, inspired by SuperWhisper.
+- **98% vibecoded**, inspired by SuperWhisper.
 - 0 API calls, all local
 
 This is what it looks like when you're speaking (but smaller and translucent):
