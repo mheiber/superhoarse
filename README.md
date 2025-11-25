@@ -1,4 +1,4 @@
-> Code quality warning: 90% vibecoded
+> [Get on Mac app store](https://apps.apple.com/gb/app/superhoarse/id6752038945?mt=12) (safe: completely sandboxed, no internet access, these claims are vetted by Apple App Store reviewers). Contributor warning: 90% vibecoded. 
 
 # Superhoarse
 
@@ -32,8 +32,9 @@ And configuring:
 
 ## Installation
 
-Prod: App Store (coming soon)
-Development (human-only, requires sudo for copying to Applications folder): `make install`
+Easy: [Get on Mac app store](https://apps.apple.com/gb/app/superhoarse/id6752038945?mt=12) (safe: completely sandboxed, no internet access, these claims are vetted by Apple App Store reviewers). Contributor warning: 90% vibecoded. 
+
+Development Installation: (human-only, requires sudo for copying to Applications folder): `make install`
 
 
 ## Usage
