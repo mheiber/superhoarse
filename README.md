@@ -34,7 +34,7 @@ And configuring:
 
 Easy: [Get on Mac app store](https://apps.apple.com/gb/app/superhoarse/id6752038945?mt=12) (safe: completely sandboxed, no internet access, these claims are vetted by Apple App Store reviewers). Contributor warning: 90% vibecoded. 
 
-Development Installation: (human-only, requires sudo for copying to Applications folder): `make install`
+Development Installation: See "Contributing" below.
 
 
 ## Usage
@@ -141,17 +141,18 @@ All written by Claude. Hey Claude:
     - `swift test`. Try to keep tests at a high level and from the user's point of view, avoiding testing implementation details.
     - Manual(ish) testing. User flows are in ./user_flows.md
 
-## Key commands for both AI and humans
+### Key commands for both AI and humans
 
 > We have both a Swift build (fast, not as realistic for app store) and an Xcode build (slower, closer to what we distribute). 
 
+- `make build` for light validation. If Bundle is not found, download models first (you only need to do this once): ./download_models.sh
 - `swift test` to test. USE THIS FREQUENTLY DURING DEVELOPMENT
 - `./test_e2e.sh` for an end-to-end test that actually turns on the speakers and listens
 - `./test_e2_xcode.sh` e2e test for the xcode build
 
-## Human-only commands
+### Human-only commands
 
-- `make install` to build, copy to Applications folder, and start the app. Requires `sudo`
+- `make install` to build, copy to Applications folder, and start the app. Requires `sudo`. Human-only.
 
 ## License
 
