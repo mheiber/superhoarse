@@ -27,7 +27,8 @@ let package = Package(
                 .copy("Resources/ParakeetEncoder_v2.mlmodelc"),
                 .copy("Resources/ParakeetDecoder.mlmodelc"),
                 .copy("Resources/RNNTJoint.mlmodelc"),
-                .copy("Resources/parakeet_vocab.json")
+                .copy("Resources/parakeet_vocab.json"),
+                .copy("Resources/models.sha256")
             ]
         ),
         .testTarget(

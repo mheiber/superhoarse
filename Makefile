@@ -2,7 +2,7 @@
 
 # Build the application
 build:
-	swift build -c release
+	swift build -c release --disable-sandbox
 
 # Build with Xcode
 build-xcode:
