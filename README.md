@@ -32,9 +32,24 @@ And configuring:
 
 ## Installation
 
-Easy: [Get on Mac app store](https://apps.apple.com/gb/app/superhoarse/id6752038945?mt=12) (safe: completely sandboxed, no internet access, these claims are vetted by Apple App Store reviewers). Contributor warning: 90% vibecoded. 
+Easy: [Get on Mac app store](https://apps.apple.com/gb/app/superhoarse/id6752038945?mt=12) (safe: completely sandboxed, no internet access, these claims are vetted by Apple App Store reviewers). Contributor warning: 90% vibecoded.
 
-Development Installation: See "Contributing" below.
+### Homebrew (builds from source)
+
+```bash
+# Install from the local formula (after cloning repo)
+brew install --formula Formula/superhoarse.rb
+
+# Or create a tap for easier installation:
+# brew tap mheiber/superhoarse https://github.com/mheiber/superhoarse
+# brew install superhoarse
+```
+
+Note: The Homebrew build downloads ~607MB of speech recognition models from HuggingFace during installation.
+
+### Development Installation
+
+See "Contributing" below.
 
 
 ## Usage
@@ -143,12 +158,36 @@ All written by Claude. Hey Claude:
 
 ### Key commands for both AI and humans
 
-> We have both a Swift build (fast, not as realistic for app store) and an Xcode build (slower, closer to what we distribute). 
+> We have both a Swift build (fast, not as realistic for app store) and an Xcode build (slower, closer to what we distribute).
 
-- `make build` for light validation. If Bundle is not found, download models first (you only need to do this once): ./download_models.sh
+- `make build` - Models (~607MB) download automatically on first build from HuggingFace
 - `swift test` to test. USE THIS FREQUENTLY DURING DEVELOPMENT
 - `./test_e2e.sh` for an end-to-end test that actually turns on the speakers and listens
-- `./test_e2_xcode.sh` e2e test for the xcode build
+- `./test_e2e_xcode.sh` e2e test for the xcode build
+
+### Managing Models
+
+**Automatic download:**
+Models download automatically during build if missing or corrupt. First build will download ~607MB from HuggingFace.
+
+**Update to latest models:**
+```bash
+make update-models
+```
+
+**Model verification:**
+```bash
+# Quick check (uses cached marker, ~0.01s)
+make check-models
+
+# Full validation (re-hashes all files, ~2-3s)
+make models
+```
+
+**Troubleshooting:**
+- **Models won't download:** Check internet connection and HuggingFace status
+- **Checksum mismatch:** Run `make update-models` to force re-download
+- **Disk space:** Models require ~607MB in Sources/Resources/
 
 ### Human-only commands
 

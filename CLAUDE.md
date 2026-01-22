@@ -26,6 +26,28 @@ make clean
 make install
 ```
 
+### Model Management
+```bash
+# Automatic (happens during build if needed)
+make build  # Auto-downloads models if missing
+
+# Manual update to latest models
+make update-models
+
+# Quick validation (fast, uses marker)
+make check-models
+
+# Full validation (slow, re-hashes all files)
+make models
+```
+
+**Models:**
+- Location: `Sources/Resources/` (gitignored, ~607MB)
+- Version tracking: `.models_version` marker file (local cache)
+- Checksums: `models.sha256` (committed to git for reproducibility)
+- Source: HuggingFace parakeet-tdt-0.6b-v2-coreml
+- First build auto-downloads if missing
+
 ### Testing
 ```bash
 # Run all tests

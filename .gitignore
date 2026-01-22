@@ -46,3 +46,5 @@ swift-*-RELEASE*/
 swift-*-ubuntu*/
 *.tar.gz
 
+# Distribution builds
+dist/
