@@ -154,7 +154,7 @@ The app supports two recording modes using the same or different hotkeys:
 
 ### Same key for both (default behavior)
 
-When TRIGGER KEY and TRIGGER PUSH-TO-TALK are the same (the default), the app uses
+When TRIGGER KEY and TRIGGER PUSH-TO-TALK have the same key AND modifier (the default), the app uses
 **timing-based disambiguation** on key-up:
 
 - Key-down → start recording immediately
@@ -166,8 +166,8 @@ A normal intentional tap is 100-150ms. Holding to say even a short word ("yes") 
 
 ### Different keys (no ambiguity)
 
-When the user sets different keys for toggle vs PTT in settings, there is no timing
-ambiguity. The toggle key always toggles. The PTT key always holds.
+When the user sets different keys or different modifiers for toggle vs PTT in settings,
+there is no timing ambiguity. The toggle key always toggles. The PTT key always holds.
 
 ### Escape key behavior
 
@@ -192,7 +192,8 @@ The floating listening indicator shows different instructions depending on mode:
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `hotKeyModifier` | Int | 0 | Modifier combo (shared by both keys) |
+| `hotKeyModifier` | Int | 0 | Toggle modifier combo |
+| `hotKeyModifierPTT` | Int | -1 | PTT modifier combo (-1 = use same as hotKeyModifier) |
 | `hotKeyCode` | Int | 49 | Toggle trigger key (Carbon key code) |
 | `hotKeyCodePTT` | Int | 0 | PTT trigger key (0 = use same as hotKeyCode) |
 
@@ -203,3 +204,5 @@ The floating listening indicator shows different instructions depending on mode:
 - **The 200ms threshold is intentional**. Don't change it without testing both modes.
 - **hotKeyCodePTT == 0 means "same as toggle key"**, not "no PTT key". This is how
   UserDefaults works (returns 0 for unset integers).
+- **hotKeyModifierPTT == -1 means "same as toggle modifier"**. Unlike key codes,
+  modifier value 0 is valid (Option key), so -1 is used as the "unset" sentinel.

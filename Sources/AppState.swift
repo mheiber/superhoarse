@@ -647,14 +647,21 @@ class AppState: ObservableObject {
     }
 
     /// Returns the display string for the PTT hotkey (e.g., "⌘⇧Space").
-    /// When the PTT key is not explicitly set (UserDefaults returns 0),
-    /// falls back to the toggle key — which is the default "same key" config.
+    /// When the PTT key/modifier is not explicitly set, falls back to the
+    /// toggle key/modifier — which is the default "same key" config.
     func getCurrentPTTShortcutString() -> String {
-        let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
+        let toggleModifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
         let pttKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCodePTT")
         let toggleKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
 
-        let modifierString = HotkeyConfiguration.getModifierSymbol(for: modifierValue)
+        // Fall back to toggle modifier if PTT modifier was never set or is -1
+        let effectiveModifier: Int
+        if let pttModObj = UserDefaults.standard.object(forKey: "hotKeyModifierPTT") as? Int, pttModObj >= 0 {
+            effectiveModifier = pttModObj
+        } else {
+            effectiveModifier = toggleModifierValue
+        }
+        let modifierString = HotkeyConfiguration.getModifierSymbol(for: effectiveModifier)
         // Fall back to toggle key if PTT key is not explicitly set
         let effectivePTTCode = pttKeyCodeValue > 0 ? pttKeyCodeValue : (toggleKeyCodeValue > 0 ? toggleKeyCodeValue : 49)
         let keyString = HotkeyConfiguration.getKeyName(for: effectivePTTCode)

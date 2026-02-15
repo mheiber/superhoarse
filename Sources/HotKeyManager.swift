@@ -8,7 +8,7 @@ import AppKit
 //
 // ARCHITECTURE OVERVIEW (READ THIS BEFORE MODIFYING):
 //
-// This manager supports TWO separate hotkeys that share the same modifier keys:
+// This manager supports TWO separate hotkeys with independent modifier keys:
 //   1. "Toggle" hotkey (TRIGGER KEY) — used for tap-to-toggle recording
 //   2. "PTT" hotkey (TRIGGER PUSH-TO-TALK) — used for hold-to-record (push-to-talk)
 //
@@ -57,6 +57,7 @@ class HotKeyManager {
     private var keyCode: UInt32 = 49         // Toggle trigger key (default: Space)
     private var pttKeyCode: UInt32 = 49      // PTT trigger key (default: Space, same as toggle)
     private var modifiers: UInt32 = UInt32(optionKey)
+    private var modifiersPTT: UInt32 = UInt32(optionKey)  // PTT modifier (default: same as toggle)
 
     // Carbon hotkey IDs — these distinguish which hotkey fired in the event handler.
     // ID 1 = shared (both keys are the same) or toggle-only
@@ -86,19 +87,34 @@ class HotKeyManager {
 
     // MARK: - Settings
 
+    /// Converts a UserDefaults modifier value (0-4) to Carbon modifier flags.
+    private static func carbonModifiers(for value: Int) -> UInt32 {
+        switch value {
+        case 0: return UInt32(optionKey)
+        case 1: return UInt32(cmdKey | shiftKey)
+        case 2: return UInt32(cmdKey | optionKey)
+        case 3: return UInt32(cmdKey | controlKey)
+        case 4: return UInt32(optionKey | shiftKey)
+        default: return UInt32(optionKey)
+        }
+    }
+
     private func loadHotKeySettings() {
         let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
         let keyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
         let pttKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCodePTT")
 
-        // Convert modifier value to Carbon modifier flags
-        switch modifierValue {
-        case 0: modifiers = UInt32(optionKey)
-        case 1: modifiers = UInt32(cmdKey | shiftKey)
-        case 2: modifiers = UInt32(cmdKey | optionKey)
-        case 3: modifiers = UInt32(cmdKey | controlKey)
-        case 4: modifiers = UInt32(optionKey | shiftKey)
-        default: modifiers = UInt32(optionKey)
+        // Convert modifier values to Carbon modifier flags
+        modifiers = HotKeyManager.carbonModifiers(for: modifierValue)
+
+        // PTT modifier: if the key was never set in UserDefaults, fall back to toggle modifier.
+        // We check object(forKey:) because integer(forKey:) returns 0 for unset keys, and
+        // 0 is a valid modifier value (Option key). The UI stores -1 as the @AppStorage default,
+        // and any negative value also means "use toggle modifier."
+        if let pttModObj = UserDefaults.standard.object(forKey: "hotKeyModifierPTT") as? Int, pttModObj >= 0 {
+            modifiersPTT = HotKeyManager.carbonModifiers(for: pttModObj)
+        } else {
+            modifiersPTT = modifiers
         }
 
         // Use custom key codes or default to Space (49)
@@ -117,11 +133,11 @@ class HotKeyManager {
 
     // MARK: - Registration
 
-    /// Whether the toggle key and PTT key are configured to the same key.
+    /// Whether the toggle key and PTT key are configured to the same key AND modifier.
     /// When true, we register one hotkey and use timing logic in AppState.
     /// When false, we register two separate hotkeys with unambiguous behavior.
     var keysAreShared: Bool {
-        return keyCode == pttKeyCode
+        return keyCode == pttKeyCode && modifiers == modifiersPTT
     }
 
     private func registerHotKeys() {
@@ -152,7 +168,7 @@ class HotKeyManager {
             hotKeyID.id = HotKeyManager.toggleHotKeyIDValue
             RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &toggleHotKeyRef)
 
-            let shortcutString = getShortcutString(forKeyCode: keyCode)
+            let shortcutString = getShortcutString(forKeyCode: keyCode, withModifiers: modifiers)
             print("Registered shared hotkey (toggle+PTT): \(shortcutString)")
         } else {
             // Different keys — register two separate hotkeys
@@ -167,10 +183,10 @@ class HotKeyManager {
             var pttID = EventHotKeyID()
             pttID.signature = OSType("SWLT".fourCharCodeValue)
             pttID.id = HotKeyManager.pttHotKeyIDValue
-            RegisterEventHotKey(pttKeyCode, modifiers, pttID, GetApplicationEventTarget(), 0, &pttHotKeyRef)
+            RegisterEventHotKey(pttKeyCode, modifiersPTT, pttID, GetApplicationEventTarget(), 0, &pttHotKeyRef)
 
-            let toggleStr = getShortcutString(forKeyCode: keyCode)
-            let pttStr = getShortcutString(forKeyCode: pttKeyCode)
+            let toggleStr = getShortcutString(forKeyCode: keyCode, withModifiers: modifiers)
+            let pttStr = getShortcutString(forKeyCode: pttKeyCode, withModifiers: modifiersPTT)
             print("Registered separate hotkeys — toggle: \(toggleStr), PTT: \(pttStr)")
         }
     }
@@ -234,12 +250,12 @@ class HotKeyManager {
 
     // MARK: - Display Helpers
 
-    private func getShortcutString(forKeyCode code: UInt32) -> String {
+    private func getShortcutString(forKeyCode code: UInt32, withModifiers mods: UInt32) -> String {
         var modifierString = ""
-        if modifiers & UInt32(cmdKey) != 0 { modifierString += "⌘" }
-        if modifiers & UInt32(optionKey) != 0 { modifierString += "⌥" }
-        if modifiers & UInt32(controlKey) != 0 { modifierString += "⌃" }
-        if modifiers & UInt32(shiftKey) != 0 { modifierString += "⇧" }
+        if mods & UInt32(cmdKey) != 0 { modifierString += "⌘" }
+        if mods & UInt32(optionKey) != 0 { modifierString += "⌥" }
+        if mods & UInt32(controlKey) != 0 { modifierString += "⌃" }
+        if mods & UInt32(shiftKey) != 0 { modifierString += "⇧" }
 
         let keyString: String
         switch code {

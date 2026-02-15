@@ -430,6 +430,7 @@ struct KeyboardShortcutConfigView: View {
     @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
     @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
     @AppStorage("hotKeyCodePTT") private var hotKeyCodePTT: Int = 0  // 0 = use same as hotKeyCode
+    @AppStorage("hotKeyModifierPTT") private var hotKeyModifierPTT: Int = -1  // -1 = use same as hotKeyModifier
     @State private var showToggleHelp = false
     @State private var showPTTHelp = false
     
@@ -536,94 +537,74 @@ struct KeyboardShortcutConfigView: View {
                     Text("HOTKEY CONFIGURATION")
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                    
+
                     Spacer()
-                    
-                    Text(currentShortcutString)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 0.0, green: 0.8, blue: 1.0))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.black.opacity(0.4))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.6), lineWidth: 1)
-                                )
-                        )
                 }
                 
-                HStack(spacing: 20) {
-                    // Modifier picker
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("MODIFIER KEYS:")
-                            .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.7))
+                // Row 1: Trigger Key (modifier + key)
+                HStack {
+                    Text("TRIGGER KEY:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
 
-                        Menu {
-                            ForEach(HotkeyConfiguration.modifierOptions, id: \.value) { option in
-                                Button(action: {
-                                    hotKeyModifier = option.value
-                                    NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
-                                }) {
-                                    HStack {
-                                        Text(option.name)
-                                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showToggleHelp.toggle()
+                            if showToggleHelp { showPTTHelp = false }
+                        }
+                    }) {
+                        Text("(?)")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(showToggleHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
+                    }
+                    .buttonStyle(PlainButtonStyle())
 
-                                        if hotKeyModifier == option.value {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                                        }
+                    Spacer()
+
+                    // Toggle modifier dropdown
+                    Menu {
+                        ForEach(HotkeyConfiguration.modifierOptions, id: \.value) { option in
+                            Button(action: {
+                                hotKeyModifier = option.value
+                                NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                            }) {
+                                HStack {
+                                    Text(option.name)
+                                    if hotKeyModifier == option.value {
+                                        Image(systemName: "checkmark")
                                     }
                                 }
                             }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text(HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧")
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.white)
-
-                                Image(systemName: "chevron.down")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.black.opacity(0.4))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
-                                    )
-                            )
                         }
-                        .menuStyle(BorderlessButtonMenuStyle())
-                        .frame(width: 200)
-                    }
-                }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.symbol ?? "⌥")
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
 
-                // TRIGGER KEY with (?) help
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Text("TRIGGER KEY:")
-                            .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.7))
-
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showToggleHelp.toggle()
-                                if showToggleHelp { showPTTHelp = false }
-                            }
-                        }) {
-                            Text("(?)")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(showToggleHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black.opacity(0.4))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
+                                )
+                        )
                     }
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    .fixedSize()
 
+                    Text("+")
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4))
+
+                    // Toggle key dropdown
                     Menu {
                         ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
                             Button(action: {
@@ -632,11 +613,8 @@ struct KeyboardShortcutConfigView: View {
                             }) {
                                 HStack {
                                     Text(option.name)
-                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-
                                     if hotKeyCode == option.code {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                                        Image(systemName: "checkmark")
                                     }
                                 }
                             }
@@ -651,8 +629,8 @@ struct KeyboardShortcutConfigView: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.black.opacity(0.4))
@@ -663,7 +641,7 @@ struct KeyboardShortcutConfigView: View {
                         )
                     }
                     .menuStyle(BorderlessButtonMenuStyle())
-                    .frame(width: 140)
+                    .fixedSize()
                 }
 
                 // Inline help for TRIGGER KEY
@@ -693,26 +671,70 @@ struct KeyboardShortcutConfigView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                // TRIGGER PUSH-TO-TALK with (?) help
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Text("TRIGGER PUSH-TO-TALK:")
-                            .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.7))
+                // Row 2: Push-to-Talk Key (modifier + key)
+                HStack {
+                    Text("PUSH-TO-TALK KEY:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
 
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showPTTHelp.toggle()
-                                if showPTTHelp { showToggleHelp = false }
-                            }
-                        }) {
-                            Text("(?)")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(showPTTHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showPTTHelp.toggle()
+                            if showPTTHelp { showToggleHelp = false }
                         }
-                        .buttonStyle(PlainButtonStyle())
+                    }) {
+                        Text("(?)")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(showPTTHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
                     }
+                    .buttonStyle(PlainButtonStyle())
 
+                    Spacer()
+
+                    // PTT modifier dropdown
+                    Menu {
+                        ForEach(HotkeyConfiguration.modifierOptions, id: \.value) { option in
+                            Button(action: {
+                                hotKeyModifierPTT = option.value
+                                NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                            }) {
+                                HStack {
+                                    Text(option.name)
+                                    if effectivePTTModifier == option.value {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(HotkeyConfiguration.modifierOptions.first { $0.value == effectivePTTModifier }?.symbol ?? "⌥")
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black.opacity(0.4))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    .fixedSize()
+
+                    Text("+")
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4))
+
+                    // PTT key dropdown
                     Menu {
                         ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
                             Button(action: {
@@ -721,11 +743,8 @@ struct KeyboardShortcutConfigView: View {
                             }) {
                                 HStack {
                                     Text(option.name)
-                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-
                                     if effectivePTTKeyCode == option.code {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                                        Image(systemName: "checkmark")
                                     }
                                 }
                             }
@@ -740,8 +759,8 @@ struct KeyboardShortcutConfigView: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.black.opacity(0.4))
@@ -752,7 +771,7 @@ struct KeyboardShortcutConfigView: View {
                         )
                     }
                     .menuStyle(BorderlessButtonMenuStyle())
-                    .frame(width: 140)
+                    .fixedSize()
                 }
 
                 // Inline help for TRIGGER PUSH-TO-TALK
@@ -805,17 +824,14 @@ struct KeyboardShortcutConfigView: View {
         }
     }
     
-    private var currentShortcutString: String {
-        let modifierName = HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧"
-        let keyName = HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space"
-        return "\(modifierName.components(separatedBy: " ").first ?? "⌘⇧") + \(keyName)"
-    }
-
-    /// The effective PTT key code, falling back to the toggle key code when not explicitly set.
-    /// hotKeyCodePTT == 0 means "use the same key as TRIGGER KEY".
     private var effectivePTTKeyCode: Int {
         return hotKeyCodePTT > 0 ? hotKeyCodePTT : hotKeyCode
     }
+
+    private var effectivePTTModifier: Int {
+        return hotKeyModifierPTT >= 0 ? hotKeyModifierPTT : hotKeyModifier
+    }
+
 }
 
 struct ListeningIndicatorView: View {
