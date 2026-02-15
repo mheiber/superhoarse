@@ -5,7 +5,7 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 MODEL_DIR="Sources/Resources"
 TEMP_DIR="${MODEL_DIR}.tmp"
-REPO_URL="https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v2-coreml/resolve/main"
+REPO_URL="https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v3-coreml/resolve/main"
 VERSION_FILE=".models_version"
 LOCK_FILE="/tmp/superhoarse_models.lock"
 
@@ -33,7 +33,7 @@ rm -rf "$TEMP_DIR"
 mkdir -p "$TEMP_DIR"
 cd "$TEMP_DIR"
 
-echo "📥 Downloading Parakeet models for bundling..."
+echo "📥 Downloading Parakeet v3 models for bundling..."
 
 # Download the required model files based on AsrModels.ModelNames
 download_with_resume() {
@@ -56,11 +56,11 @@ download_with_resume() {
 download_model_dir() {
     local model_name=$1
     echo "Downloading $model_name..."
-    
+
     # Create directory structure
     mkdir -p "$model_name/weights"
     cd "$model_name"
-    
+
     # Download essential files for CoreML model
     echo "  Downloading coremldata.bin..."
     download_with_resume "$REPO_URL/$model_name/coremldata.bin" "coremldata.bin"
@@ -73,7 +73,7 @@ download_model_dir() {
 
     echo "  Downloading weights/weight.bin..."
     download_with_resume "$REPO_URL/$model_name/weights/weight.bin" "weights/weight.bin"
-    
+
     # Verify all files were downloaded
     if [ -f "coremldata.bin" ] && [ -f "metadata.json" ] && [ -f "model.mil" ] && [ -f "weights/weight.bin" ]; then
         echo "✅ Downloaded $model_name successfully"
@@ -82,7 +82,7 @@ download_model_dir() {
         ls -la
         ls -la weights/ 2>/dev/null || echo "weights directory missing"
     fi
-    
+
     cd ..
 }
 
@@ -91,10 +91,10 @@ echo "Downloading vocabulary file..."
 download_with_resume "$REPO_URL/parakeet_vocab.json" "parakeet_vocab.json"
 
 # Download model directories
-download_model_dir "Melspectogram.mlmodelc"
-download_model_dir "ParakeetEncoder_v2.mlmodelc"  
-download_model_dir "ParakeetDecoder.mlmodelc"
-download_model_dir "RNNTJoint.mlmodelc"
+download_model_dir "Preprocessor.mlmodelc"
+download_model_dir "Encoder.mlmodelc"
+download_model_dir "Decoder.mlmodelc"
+download_model_dir "JointDecision.mlmodelc"
 
 echo "📋 Creating checksum for all model files..."
 CHECKSUM_FILE="models.sha256"
@@ -105,7 +105,7 @@ echo "✅ Checksum saved to $CHECKSUM_FILE"
 echo "📝 Creating version marker..."
 CHECKSUM_HASH=$($HASH_CMD "$CHECKSUM_FILE" | cut -d' ' -f1)
 cat > "$VERSION_FILE" << EOF
-VERSION=parakeet-tdt-0.6b-v2-coreml-main-$(date +%Y%m%d)
+VERSION=parakeet-tdt-0.6b-v3-coreml-main-$(date +%Y%m%d)
 CHECKSUM_FILE=$CHECKSUM_FILE
 CHECKSUM_HASH=$CHECKSUM_HASH
 DOWNLOAD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -121,6 +121,6 @@ mv "$TEMP_DIR" "$MODEL_DIR"
 rm -rf "$MODEL_DIR.old"
 
 echo "🎉 All models downloaded and installed to $MODEL_DIR"
-echo "📊 Model version: parakeet-tdt-0.6b-v2-coreml-main-$(date +%Y%m%d)"
+echo "📊 Model version: parakeet-tdt-0.6b-v3-coreml-main-$(date +%Y%m%d)"
 
 # Note: Now add these files to your Xcode project as bundle resources (already configured in Package.swift)

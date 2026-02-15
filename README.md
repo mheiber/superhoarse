@@ -26,7 +26,7 @@ And configuring:
 
 ## Requirements
 
-- macOS 13.0 (Ventura) or later
+- macOS 14.0 (Sonoma) or later
 - Apple Silicon Mac (M1/M2/M3) recommended for best performance
 - Microphone access permission
 
@@ -93,7 +93,7 @@ Superhoarse is built with simplicity and performance in mind:
 
 ### Core Dependencies
 
-- **FluidAudio** (`~0.2.0`) - High-performance audio processing for speech recognition
+- **FluidAudio** (`~0.12.1`) - High-performance audio processing for speech recognition
   - *Why chosen*: Optimized Swift implementation for real-time audio processing
   - *Alternatives considered*: Built-in SpeechRecognizer (cloud-based), Core ML models (larger)
   - *Benefits*: Runs entirely offline, optimized for Apple Silicon, minimal latency
@@ -143,7 +143,7 @@ make setup
 ## Limitations
 
 - **macOS only** - Built specifically for Apple's ecosystem
-- **English only** - At least until we integrate a multilingual model. I think there may be a new Parakeet that does this.
+- **Multilingual** - Supports 25 European languages (English, French, German, Spanish, etc.). Chinese/Japanese/Korean not yet supported (would require Qwen3-ASR model).
 
 ## Contributing
 

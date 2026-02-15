@@ -6,15 +6,15 @@ import os.log
 /// Local implementation of AsrModels that uses bundled models instead of downloading
 public class BundledAsrModels {
     private static let logger = Logger(subsystem: "com.superhoarse.lite", category: "BundledAsrModels")
-    
+
     public struct ModelNames {
-        public static let melspectrogram = "Melspectogram.mlmodelc"
-        public static let encoder = "ParakeetEncoder_v2.mlmodelc"
-        public static let decoder = "ParakeetDecoder.mlmodelc"
-        public static let joint = "RNNTJoint.mlmodelc"
+        public static let preprocessor = "Preprocessor.mlmodelc"
+        public static let encoder = "Encoder.mlmodelc"
+        public static let decoder = "Decoder.mlmodelc"
+        public static let joint = "JointDecision.mlmodelc"
         public static let vocabulary = "parakeet_vocab.json"
     }
-    
+
     /// Load bundled ASR models from the app bundle
     public static func loadBundledModels() throws -> AsrModels {
         logger.info("Loading bundled ASR models from app bundle")
@@ -28,31 +28,31 @@ public class BundledAsrModels {
                 logger.info("Bundle contents: \(contents)")
             }
         }
-        
+
         // Get model URLs from bundle
-        let melURL = bundle.url(forResource: "Melspectogram", withExtension: "mlmodelc")
-        let encoderURL = bundle.url(forResource: "ParakeetEncoder_v2", withExtension: "mlmodelc")
-        let decoderURL = bundle.url(forResource: "ParakeetDecoder", withExtension: "mlmodelc")
-        let jointURL = bundle.url(forResource: "RNNTJoint", withExtension: "mlmodelc")
+        let preprocessorURL = bundle.url(forResource: "Preprocessor", withExtension: "mlmodelc")
+        let encoderURL = bundle.url(forResource: "Encoder", withExtension: "mlmodelc")
+        let decoderURL = bundle.url(forResource: "Decoder", withExtension: "mlmodelc")
+        let jointURL = bundle.url(forResource: "JointDecision", withExtension: "mlmodelc")
         let vocabURL = bundle.url(forResource: "parakeet_vocab", withExtension: "json")
-        
+
         logger.info("Model URLs found:")
-        logger.info("  melURL: \(melURL?.path ?? "nil")")
+        logger.info("  preprocessorURL: \(preprocessorURL?.path ?? "nil")")
         logger.info("  encoderURL: \(encoderURL?.path ?? "nil")")
         logger.info("  decoderURL: \(decoderURL?.path ?? "nil")")
-        logger.info("  jointURL: \(jointURL?.path ?? "nil")") 
+        logger.info("  jointURL: \(jointURL?.path ?? "nil")")
         logger.info("  vocabURL: \(vocabURL?.path ?? "nil")")
-        
-        guard let melURL = melURL,
+
+        guard let preprocessorURL = preprocessorURL,
               let encoderURL = encoderURL,
               let decoderURL = decoderURL,
               let jointURL = jointURL,
               let vocabURL = vocabURL else {
             throw BundledAsrModelsError.modelsNotFound("Required model files not found in app bundle")
         }
-        
+
         logger.info("Found all model files in bundle")
-        
+
         // Load vocabulary
         let vocabData = try Data(contentsOf: vocabURL)
         let vocabDict = try JSONDecoder().decode([String: String].self, from: vocabData)
@@ -60,38 +60,39 @@ public class BundledAsrModels {
             guard let intKey = Int(key) else { return nil }
             return (intKey, value)
         })
-        
+
         // Create optimized configurations for each model
-        let melConfig = optimizedConfiguration(for: .melSpectrogram)
-        let encoderConfig = optimizedConfiguration(for: .encoder)
-        let decoderConfig = optimizedConfiguration(for: .decoder)
-        let jointConfig = optimizedConfiguration(for: .joint)
-        
+        let preprocessorConfig = optimizedConfiguration(for: .cpuOnly)
+        let encoderConfig = optimizedConfiguration(for: .cpuAndNeuralEngine)
+        let decoderConfig = optimizedConfiguration(for: .cpuAndNeuralEngine)
+        let jointConfig = optimizedConfiguration(for: .cpuAndNeuralEngine)
+
         // Load CoreML models
-        logger.info("Loading melspectrogram model...")
-        let melModel = try MLModel(contentsOf: melURL, configuration: melConfig)
-        
+        logger.info("Loading preprocessor model...")
+        let preprocessorModel = try MLModel(contentsOf: preprocessorURL, configuration: preprocessorConfig)
+
         logger.info("Loading encoder model...")
         let encoderModel = try MLModel(contentsOf: encoderURL, configuration: encoderConfig)
-        
+
         logger.info("Loading decoder model...")
         let decoderModel = try MLModel(contentsOf: decoderURL, configuration: decoderConfig)
-        
+
         logger.info("Loading joint model...")
         let jointModel = try MLModel(contentsOf: jointURL, configuration: jointConfig)
-        
+
         logger.info("All bundled models loaded successfully")
-        
+
         return AsrModels(
-            melspectrogram: melModel,
             encoder: encoderModel,
+            preprocessor: preprocessorModel,
             decoder: decoderModel,
             joint: jointModel,
-            configuration: melConfig, // Use one of the configs (they should be similar)
-            vocabulary: vocabulary
+            configuration: encoderConfig,
+            vocabulary: vocabulary,
+            version: .v3
         )
     }
-    
+
     /// Get the appropriate bundle for resources, handling both SwiftPM and Xcode builds
     private static func bundleForResources() -> Bundle {
         // Try Bundle.module first (SwiftPM)
@@ -102,43 +103,43 @@ public class BundledAsrModels {
         return Bundle.main
         #endif
     }
-    
-    /// Create optimized configuration for different model types
-    private static func optimizedConfiguration(for modelType: ANEOptimizer.ModelType) -> MLModelConfiguration {
+
+    /// Create optimized configuration for different compute unit targets
+    private static func optimizedConfiguration(for computeUnits: MLComputeUnits) -> MLModelConfiguration {
         let config = MLModelConfiguration()
-        config.computeUnits = ANEOptimizer.optimalComputeUnits(for: modelType)
+        config.computeUnits = computeUnits
         config.allowLowPrecisionAccumulationOnGPU = true
         return config
     }
-    
+
     /// Check if all required models exist in the bundle
     public static func bundledModelsExist() -> Bool {
         let bundle = bundleForResources()
         let modelNames = [
-            "Melspectogram.mlmodelc",
-            "ParakeetEncoder_v2.mlmodelc", 
-            "ParakeetDecoder.mlmodelc",
-            "RNNTJoint.mlmodelc",
+            "Preprocessor.mlmodelc",
+            "Encoder.mlmodelc",
+            "Decoder.mlmodelc",
+            "JointDecision.mlmodelc",
             "parakeet_vocab.json"
         ]
-        
+
         for modelName in modelNames {
             let resourceName = String(modelName.dropLast(modelName.hasSuffix(".mlmodelc") ? 9 : 5))
             let ext = modelName.hasSuffix(".mlmodelc") ? "mlmodelc" : "json"
-            
+
             if bundle.url(forResource: resourceName, withExtension: ext) == nil {
                 logger.warning("Missing bundled model: \(modelName)")
                 return false
             }
         }
-        
+
         return true
     }
 }
 
 public enum BundledAsrModelsError: Error, LocalizedError {
     case modelsNotFound(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .modelsNotFound(let message):

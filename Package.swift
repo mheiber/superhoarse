@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Superhoarse",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(
@@ -13,7 +13,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.2.0")
+        .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.12.1")
     ],
     targets: [
         .executableTarget(
@@ -23,10 +23,10 @@ let package = Package(
             ],
             path: "Sources",
             resources: [
-                .copy("Resources/Melspectogram.mlmodelc"),
-                .copy("Resources/ParakeetEncoder_v2.mlmodelc"),
-                .copy("Resources/ParakeetDecoder.mlmodelc"),
-                .copy("Resources/RNNTJoint.mlmodelc"),
+                .copy("Resources/Preprocessor.mlmodelc"),
+                .copy("Resources/Encoder.mlmodelc"),
+                .copy("Resources/Decoder.mlmodelc"),
+                .copy("Resources/JointDecision.mlmodelc"),
                 .copy("Resources/parakeet_vocab.json"),
                 .copy("Resources/models.sha256")
             ]

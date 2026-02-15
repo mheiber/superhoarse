@@ -68,11 +68,11 @@ models:
 				fi; \
 			else \
 				echo "📝 Creating version marker..."; \
-				echo "VERSION=parakeet-tdt-0.6b-v2-coreml-main-$$(date +%Y%m%d)" > .models_version; \
+				echo "VERSION=parakeet-tdt-0.6b-v3-coreml-main-$$(date +%Y%m%d)" > .models_version; \
 				echo "CHECKSUM_FILE=models.sha256" >> .models_version; \
 				echo "CHECKSUM_HASH=$$CHECKSUM_HASH" >> .models_version; \
 				echo "DOWNLOAD_DATE=$$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .models_version; \
-				echo "SOURCE_URL=https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v2-coreml/resolve/main" >> .models_version; \
+				echo "SOURCE_URL=https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v3-coreml/resolve/main" >> .models_version; \
 			fi; \
 			cd ../..; \
 		else \

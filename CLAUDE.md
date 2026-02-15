@@ -45,7 +45,7 @@ make models
 - Location: `Sources/Resources/` (gitignored, ~607MB)
 - Version tracking: `.models_version` marker file (local cache)
 - Checksums: `models.sha256` (committed to git for reproducibility)
-- Source: HuggingFace parakeet-tdt-0.6b-v2-coreml
+- Source: HuggingFace parakeet-tdt-0.6b-v3-coreml (multilingual)
 - First build auto-downloads if missing
 
 ### Testing
@@ -110,7 +110,7 @@ swift test --filter DictationBugReproductionTests
 
 ### Key Dependencies
 
-- **FluidAudio (0.2.0)** - Speech recognition engine interface
+- **FluidAudio (0.12.1)** - Speech recognition engine interface
 - **AVFoundation** - Audio recording and device management  
 - **Carbon** - Low-level system access for global hotkeys
 - **ApplicationServices** - Accessibility API for text insertion
