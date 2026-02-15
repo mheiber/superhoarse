@@ -2,20 +2,75 @@ import Foundation
 import Carbon
 import AppKit
 
+// =============================================================================
+// HotKeyManager: Global Hotkey Registration with Key-Down AND Key-Up Detection
+// =============================================================================
+//
+// ARCHITECTURE OVERVIEW (READ THIS BEFORE MODIFYING):
+//
+// This manager supports TWO separate hotkeys that share the same modifier keys:
+//   1. "Toggle" hotkey (TRIGGER KEY) — used for tap-to-toggle recording
+//   2. "PTT" hotkey (TRIGGER PUSH-TO-TALK) — used for hold-to-record (push-to-talk)
+//
+// By default, both hotkeys use the SAME key (e.g., Space). When they are the same,
+// we register only ONE Carbon hotkey and use timing-based logic in AppState to
+// distinguish a "tap" (< 200ms) from a "hold" (>= 200ms). See AppState.swift for
+// that logic.
+//
+// When the user configures DIFFERENT keys for toggle vs PTT, we register TWO
+// separate Carbon hotkeys. In that case, no timing ambiguity exists: the toggle
+// key always toggles, the PTT key always does hold-to-record.
+//
+// CARBON EVENT HANDLING:
+// We register for BOTH kEventHotKeyPressed AND kEventHotKeyReleased. This is
+// essential for detecting when the user releases the PTT key. The old code only
+// handled kEventHotKeyPressed, which made hold-to-record impossible.
+//
+// The event handler dispatches to onKeyDown/onKeyUp closures, passing a HotKeyID
+// so AppState knows WHICH hotkey was pressed (toggle vs PTT vs shared).
+//
+// =============================================================================
+
+/// Identifies which hotkey was pressed/released.
+/// When toggle and PTT keys are the same, `.shared` is used.
+/// When they are different, `.toggle` or `.ptt` is used.
+enum HotKeyIdentity {
+    case shared   // Toggle and PTT are the same key — AppState uses timing to disambiguate
+    case toggle   // Separate toggle key — always means tap-to-toggle
+    case ptt      // Separate PTT key — always means hold-to-record
+}
+
 class HotKeyManager {
-    private var hotKeyRef: EventHotKeyRef?
-    private let callback: () -> Void
-    
+    // Carbon hotkey references. We may have one or two depending on configuration.
+    private var toggleHotKeyRef: EventHotKeyRef?
+    private var pttHotKeyRef: EventHotKeyRef?
+
+    // Event handler reference (needed for cleanup)
+    private var eventHandlerRef: EventHandlerRef?
+
+    // Callbacks for key-down and key-up events.
+    // The HotKeyIdentity tells AppState which key was involved.
+    private let onKeyDown: (HotKeyIdentity) -> Void
+    private let onKeyUp: (HotKeyIdentity) -> Void
+
     // Current hotkey configuration
-    private var keyCode: UInt32 = 49  // Space
+    private var keyCode: UInt32 = 49         // Toggle trigger key (default: Space)
+    private var pttKeyCode: UInt32 = 49      // PTT trigger key (default: Space, same as toggle)
     private var modifiers: UInt32 = UInt32(optionKey)
-    
-    init(callback: @escaping () -> Void) {
-        self.callback = callback
+
+    // Carbon hotkey IDs — these distinguish which hotkey fired in the event handler.
+    // ID 1 = shared (both keys are the same) or toggle-only
+    // ID 2 = PTT-only (when keys are different)
+    private static let toggleHotKeyIDValue: UInt32 = 1
+    private static let pttHotKeyIDValue: UInt32 = 2
+
+    init(onKeyDown: @escaping (HotKeyIdentity) -> Void, onKeyUp: @escaping (HotKeyIdentity) -> Void) {
+        self.onKeyDown = onKeyDown
+        self.onKeyUp = onKeyUp
         loadHotKeySettings()
-        registerHotKey()
-        
-        // Listen for hotkey changes
+        registerHotKeys()
+
+        // Listen for hotkey changes from the settings UI
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(hotKeySettingsChanged),
@@ -23,87 +78,179 @@ class HotKeyManager {
             object: nil
         )
     }
-    
+
     deinit {
-        unregisterHotKey()
+        unregisterHotKeys()
         NotificationCenter.default.removeObserver(self)
     }
-    
+
+    // MARK: - Settings
+
     private func loadHotKeySettings() {
         let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
         let keyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
-        
-        // Convert modifier value to Carbon modifiers
+        let pttKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCodePTT")
+
+        // Convert modifier value to Carbon modifier flags
         switch modifierValue {
-        case 0: // Option only
-            modifiers = UInt32(optionKey)
-        case 1: // Cmd+Shift
-            modifiers = UInt32(cmdKey | shiftKey)
-        case 2: // Cmd+Option
-            modifiers = UInt32(cmdKey | optionKey)
-        case 3: // Cmd+Control
-            modifiers = UInt32(cmdKey | controlKey)
-        case 4: // Option+Shift
-            modifiers = UInt32(optionKey | shiftKey)
-        default:
-            modifiers = UInt32(optionKey)
+        case 0: modifiers = UInt32(optionKey)
+        case 1: modifiers = UInt32(cmdKey | shiftKey)
+        case 2: modifiers = UInt32(cmdKey | optionKey)
+        case 3: modifiers = UInt32(cmdKey | controlKey)
+        case 4: modifiers = UInt32(optionKey | shiftKey)
+        default: modifiers = UInt32(optionKey)
         }
-        
-        // Use custom key code or default to Space
+
+        // Use custom key codes or default to Space (49)
         keyCode = keyCodeValue > 0 ? UInt32(keyCodeValue) : 49
+
+        // PTT key defaults to the same as the toggle key if not explicitly set.
+        // UserDefaults returns 0 for unset integers, so we treat 0 as "use toggle key".
+        pttKeyCode = pttKeyCodeValue > 0 ? UInt32(pttKeyCodeValue) : keyCode
     }
-    
+
     @objc private func hotKeySettingsChanged() {
-        unregisterHotKey()
+        unregisterHotKeys()
         loadHotKeySettings()
-        registerHotKey()
+        registerHotKeys()
     }
-    
-    private func registerHotKey() {
-        var eventType = EventTypeSpec()
-        eventType.eventClass = OSType(kEventClassKeyboard)
-        eventType.eventKind = OSType(kEventHotKeyPressed)
-        
-        InstallEventHandler(GetApplicationEventTarget(), { (handler, event, userData) -> OSStatus in
-            guard let userData = userData else { return noErr }
-            let manager = Unmanaged<HotKeyManager>.fromOpaque(userData).takeUnretainedValue()
-            manager.callback()
-            return noErr
-        }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), nil)
-        
-        var hotKeyID = EventHotKeyID()
-        hotKeyID.signature = OSType("SWLT".fourCharCodeValue)
-        hotKeyID.id = 1
-        
-        RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
-        
-        let shortcutString = getShortcutString()
-        print("Registered global hotkey: \(shortcutString)")
+
+    // MARK: - Registration
+
+    /// Whether the toggle key and PTT key are configured to the same key.
+    /// When true, we register one hotkey and use timing logic in AppState.
+    /// When false, we register two separate hotkeys with unambiguous behavior.
+    var keysAreShared: Bool {
+        return keyCode == pttKeyCode
     }
-    
-    private func unregisterHotKey() {
-        if let hotKeyRef = hotKeyRef {
-            UnregisterEventHotKey(hotKeyRef)
+
+    private func registerHotKeys() {
+        // Register the Carbon event handler for BOTH key-down AND key-up.
+        // This is a single handler that dispatches based on event kind and hotkey ID.
+        var eventTypes = [
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: OSType(kEventHotKeyPressed)),
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: OSType(kEventHotKeyReleased))
+        ]
+
+        InstallEventHandler(
+            GetApplicationEventTarget(),
+            { (handler, event, userData) -> OSStatus in
+                guard let userData = userData else { return OSStatus(eventNotHandledErr) }
+                let manager = Unmanaged<HotKeyManager>.fromOpaque(userData).takeUnretainedValue()
+                return manager.handleCarbonEvent(event)
+            },
+            2, // Two event types: pressed + released
+            &eventTypes,
+            Unmanaged.passUnretained(self).toOpaque(),
+            &eventHandlerRef
+        )
+
+        if keysAreShared {
+            // Same key for both toggle and PTT — register one hotkey with "shared" ID
+            var hotKeyID = EventHotKeyID()
+            hotKeyID.signature = OSType("SWLT".fourCharCodeValue)
+            hotKeyID.id = HotKeyManager.toggleHotKeyIDValue
+            RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &toggleHotKeyRef)
+
+            let shortcutString = getShortcutString(forKeyCode: keyCode)
+            print("Registered shared hotkey (toggle+PTT): \(shortcutString)")
+        } else {
+            // Different keys — register two separate hotkeys
+
+            // Toggle hotkey (ID 1)
+            var toggleID = EventHotKeyID()
+            toggleID.signature = OSType("SWLT".fourCharCodeValue)
+            toggleID.id = HotKeyManager.toggleHotKeyIDValue
+            RegisterEventHotKey(keyCode, modifiers, toggleID, GetApplicationEventTarget(), 0, &toggleHotKeyRef)
+
+            // PTT hotkey (ID 2)
+            var pttID = EventHotKeyID()
+            pttID.signature = OSType("SWLT".fourCharCodeValue)
+            pttID.id = HotKeyManager.pttHotKeyIDValue
+            RegisterEventHotKey(pttKeyCode, modifiers, pttID, GetApplicationEventTarget(), 0, &pttHotKeyRef)
+
+            let toggleStr = getShortcutString(forKeyCode: keyCode)
+            let pttStr = getShortcutString(forKeyCode: pttKeyCode)
+            print("Registered separate hotkeys — toggle: \(toggleStr), PTT: \(pttStr)")
         }
     }
-    
-    private func getShortcutString() -> String {
+
+    private func unregisterHotKeys() {
+        if let ref = toggleHotKeyRef {
+            UnregisterEventHotKey(ref)
+            toggleHotKeyRef = nil
+        }
+        if let ref = pttHotKeyRef {
+            UnregisterEventHotKey(ref)
+            pttHotKeyRef = nil
+        }
+        if let ref = eventHandlerRef {
+            RemoveEventHandler(ref)
+            eventHandlerRef = nil
+        }
+    }
+
+    // MARK: - Event Handling
+
+    /// Handles Carbon hotkey events (both pressed and released).
+    /// Extracts the hotkey ID to determine which key fired, then dispatches
+    /// to the appropriate onKeyDown/onKeyUp callback with the correct identity.
+    private func handleCarbonEvent(_ event: EventRef?) -> OSStatus {
+        guard let event = event else { return OSStatus(eventNotHandledErr) }
+
+        // Extract which hotkey fired from the event
+        var hotKeyID = EventHotKeyID()
+        let status = GetEventParameter(
+            event,
+            EventParamName(kEventParamDirectObject),
+            EventParamType(typeEventHotKeyID),
+            nil,
+            MemoryLayout<EventHotKeyID>.size,
+            nil,
+            &hotKeyID
+        )
+        guard status == noErr else { return status }
+
+        // Determine the identity based on the hotkey ID and whether keys are shared
+        let identity: HotKeyIdentity
+        if keysAreShared {
+            identity = .shared
+        } else if hotKeyID.id == HotKeyManager.pttHotKeyIDValue {
+            identity = .ptt
+        } else {
+            identity = .toggle
+        }
+
+        // Dispatch based on event kind (pressed vs released)
+        let eventKind = GetEventKind(event)
+        if eventKind == UInt32(kEventHotKeyPressed) {
+            onKeyDown(identity)
+        } else if eventKind == UInt32(kEventHotKeyReleased) {
+            onKeyUp(identity)
+        }
+
+        return noErr
+    }
+
+    // MARK: - Display Helpers
+
+    private func getShortcutString(forKeyCode code: UInt32) -> String {
         var modifierString = ""
         if modifiers & UInt32(cmdKey) != 0 { modifierString += "⌘" }
         if modifiers & UInt32(optionKey) != 0 { modifierString += "⌥" }
         if modifiers & UInt32(controlKey) != 0 { modifierString += "⌃" }
         if modifiers & UInt32(shiftKey) != 0 { modifierString += "⇧" }
-        
+
         let keyString: String
-        switch keyCode {
+        switch code {
         case 49: keyString = "Space"
         case 15: keyString = "R"
         case 17: keyString = "T"
         case 46: keyString = "M"
         case 9: keyString = "V"
-        default: keyString = "Key(\(keyCode))"
+        default: keyString = "Key(\(code))"
         }
-        
+
         return "\(modifierString)\(keyString)"
     }
 }

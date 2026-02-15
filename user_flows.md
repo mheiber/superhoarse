@@ -42,14 +42,32 @@
 - Microphone permission granted
 - Speech engine initialized (check status in settings)
 
-### Happy Path
-1. Press hotkey (default: ⌘⇧Space)
+### Hold-to-Record (Push-to-Talk) Path
+1. Press and HOLD hotkey (default: ⌘⇧Space)
 2. Listening indicator appears (floating window, top of screen)
-3. Speak clearly for 1-3 seconds
-4. Release hotkey OR press again to stop
-5. Listening indicator disappears
-6. Text appears in focused application
-7. If "Copy to Clipboard" is enabled in settings, text is also copied to clipboard
+3. Listening indicator shows: "Release ⌘⇧Space to stop" (no ESC instruction)
+4. Speak while holding the key
+5. Release the hotkey (after holding >= 200ms)
+6. Listening indicator disappears
+7. Text appears in focused application
+8. If "Copy to Clipboard" is enabled in settings, text is also copied to clipboard
+
+### Tap-to-Toggle Path
+1. Quick-press hotkey (release within < 200ms)
+2. Listening indicator appears (floating window, top of screen)
+3. Listening indicator shows: "ESC to cancel" and "⌘⇧Space to stop"
+4. Speak (both hands are free)
+5. Press hotkey again to stop, OR press ESC to cancel
+6. Listening indicator disappears
+7. If stopped (not cancelled): text appears in focused application
+8. If "Copy to Clipboard" is enabled in settings, text is also copied to clipboard
+
+### How Hold vs Tap is Detected
+- Recording starts immediately on key-down (no delay)
+- On key-up, the app checks how long the key was held
+- Held >= 200ms → hold mode → stop recording
+- Held < 200ms → tap → enter toggle mode, keep recording
+- When TRIGGER KEY and TRIGGER PUSH-TO-TALK are set to different keys, no timing logic is needed — each key has exactly one behavior
 
 ### Audio Level Feedback
 1. During recording, listening indicator shows real-time audio levels
@@ -59,16 +77,30 @@
 ## 3. Hotkey Management Flow
 
 ### Default Hotkey
-- ⌘⇧Space triggers recording
+- ⌘⇧Space triggers both hold-to-record and tap-to-toggle
 - Works globally across all applications
+- TRIGGER KEY and TRIGGER PUSH-TO-TALK default to the same key (Space)
 
 ### Custom Hotkey Setup
 1. Open settings window
 2. Navigate to hotkey configuration section
 3. Select different modifier combination (⌘⌥, ⌘⌃, ⌥⇧)
-4. Select different key (R, T, M, V, Space)
-5. Hotkey updates immediately
-6. Test new combination works globally
+4. Select different TRIGGER KEY (R, T, M, V, Space)
+5. Optionally select a different TRIGGER PUSH-TO-TALK key
+6. Hotkey updates immediately
+7. Test new combination works globally
+
+### Separate Toggle and PTT Keys
+1. Open settings window
+2. Set TRIGGER KEY to one key (e.g., Space)
+3. Set TRIGGER PUSH-TO-TALK to a different key (e.g., R)
+4. Toggle key (Space) always toggles: press to start, press to stop
+5. PTT key (R) always holds: press to start, release to stop
+6. No 200ms timing logic needed when keys are different
+
+### Help Text
+- Click (?) next to TRIGGER KEY to see tap-to-toggle instructions
+- Click (?) next to TRIGGER PUSH-TO-TALK to see hold-to-record instructions
 
 ### Hotkey Display
 - Current hotkey shown in settings window
@@ -121,16 +153,21 @@
 
 ## 6. Recording Cancellation Flow
 
-### Escape Key Cancellation
-1. Start recording with hotkey
+### Escape Key Cancellation (Toggle Mode Only)
+1. Start recording with a quick tap of the hotkey (enters toggle mode)
 2. Press Escape key during recording
 3. Recording stops immediately
 4. No transcription occurs
 5. Listening indicator disappears
 6. No text insertion or clipboard update
 
-### Manual Stop
-1. Start recording with hotkey
+### Escape During Hold Mode
+- ESC is NOT monitored during hold-to-record
+- User's hand is on the hotkey, making ESC hard to reach
+- To cancel during hold: simply release the hotkey (recording will be very short and filtered out)
+
+### Manual Stop (Toggle Mode)
+1. Start recording with a quick tap of the hotkey
 2. Press hotkey again to stop
 3. Normal transcription flow continues
 

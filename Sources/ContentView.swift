@@ -429,6 +429,9 @@ struct KeyboardShortcutConfigView: View {
     @EnvironmentObject var appState: AppState
     @AppStorage("hotKeyModifier") private var hotKeyModifier: Int = 0
     @AppStorage("hotKeyCode") private var hotKeyCode: Int = 49
+    @AppStorage("hotKeyCodePTT") private var hotKeyCodePTT: Int = 0  // 0 = use same as hotKeyCode
+    @State private var showToggleHelp = false
+    @State private var showPTTHelp = false
     
     
     var body: some View {
@@ -557,7 +560,7 @@ struct KeyboardShortcutConfigView: View {
                         Text("MODIFIER KEYS:")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.7))
-                        
+
                         Menu {
                             ForEach(HotkeyConfiguration.modifierOptions, id: \.value) { option in
                                 Button(action: {
@@ -567,7 +570,7 @@ struct KeyboardShortcutConfigView: View {
                                     HStack {
                                         Text(option.name)
                                             .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                        
+
                                         if hotKeyModifier == option.value {
                                             Image(systemName: "checkmark.circle.fill")
                                                 .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
@@ -580,7 +583,7 @@ struct KeyboardShortcutConfigView: View {
                                 Text(HotkeyConfiguration.modifierOptions.first { $0.value == hotKeyModifier }?.name ?? "⌘⇧")
                                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                                     .foregroundColor(.white)
-                                
+
                                 Image(systemName: "chevron.down")
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
@@ -599,54 +602,184 @@ struct KeyboardShortcutConfigView: View {
                         .menuStyle(BorderlessButtonMenuStyle())
                         .frame(width: 200)
                     }
-                    
-                    // Key picker
-                    VStack(alignment: .leading, spacing: 10) {
+                }
+
+                // TRIGGER KEY with (?) help
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
                         Text("TRIGGER KEY:")
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.7))
-                        
-                        Menu {
-                            ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
-                                Button(action: {
-                                    hotKeyCode = option.code
-                                    NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
-                                }) {
-                                    HStack {
-                                        Text(option.name)
-                                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                        
-                                        if hotKeyCode == option.code {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                                        }
+
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showToggleHelp.toggle()
+                                if showToggleHelp { showPTTHelp = false }
+                            }
+                        }) {
+                            Text("(?)")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundColor(showToggleHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+
+                    Menu {
+                        ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
+                            Button(action: {
+                                hotKeyCode = option.code
+                                NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                            }) {
+                                HStack {
+                                    Text(option.name)
+                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+
+                                    if hotKeyCode == option.code {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
                                     }
                                 }
                             }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text(HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space")
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.white)
-                                
-                                Image(systemName: "chevron.down")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.black.opacity(0.4))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
-                                    )
-                            )
                         }
-                        .menuStyle(BorderlessButtonMenuStyle())
-                        .frame(width: 140)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space")
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black.opacity(0.4))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
+                                )
+                        )
                     }
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    .frame(width: 140)
+                }
+
+                // Inline help for TRIGGER KEY
+                if showToggleHelp {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hand.tap.fill")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Color(red: 0.0, green: 0.8, blue: 1.0))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Tap \(appState.getCurrentShortcutString()) to start recording.")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.8))
+                            Text("Tap again to stop and transcribe.")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(red: 0.0, green: 0.1, blue: 0.15).opacity(0.8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                // TRIGGER PUSH-TO-TALK with (?) help
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
+                        Text("TRIGGER PUSH-TO-TALK:")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.7))
+
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showPTTHelp.toggle()
+                                if showPTTHelp { showToggleHelp = false }
+                            }
+                        }) {
+                            Text("(?)")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundColor(showPTTHelp ? Color(red: 0.0, green: 0.8, blue: 1.0) : .white.opacity(0.4))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+
+                    Menu {
+                        ForEach(HotkeyConfiguration.keyOptions, id: \.code) { option in
+                            Button(action: {
+                                hotKeyCodePTT = option.code
+                                NotificationCenter.default.post(name: .hotKeyChanged, object: nil)
+                            }) {
+                                HStack {
+                                    Text(option.name)
+                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+
+                                    if effectivePTTKeyCode == option.code {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(HotkeyConfiguration.keyOptions.first { $0.code == effectivePTTKeyCode }?.name ?? "Space")
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 1.0, green: 0.0, blue: 1.0))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black.opacity(0.4))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 1.0, green: 0.0, blue: 1.0).opacity(0.6), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    .frame(width: 140)
+                }
+
+                // Inline help for TRIGGER PUSH-TO-TALK
+                if showPTTHelp {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hand.raised.fill")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Color(red: 0.0, green: 0.8, blue: 1.0))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Hold \(appState.getCurrentPTTShortcutString()) while speaking.")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.8))
+                            Text("Release to stop and transcribe.")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(red: 0.0, green: 0.1, blue: 0.15).opacity(0.8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(red: 0.0, green: 0.8, blue: 1.0).opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
             .padding(16)
@@ -677,6 +810,12 @@ struct KeyboardShortcutConfigView: View {
         let keyName = HotkeyConfiguration.keyOptions.first { $0.code == hotKeyCode }?.name ?? "Space"
         return "\(modifierName.components(separatedBy: " ").first ?? "⌘⇧") + \(keyName)"
     }
+
+    /// The effective PTT key code, falling back to the toggle key code when not explicitly set.
+    /// hotKeyCodePTT == 0 means "use the same key as TRIGGER KEY".
+    private var effectivePTTKeyCode: Int {
+        return hotKeyCodePTT > 0 ? hotKeyCodePTT : hotKeyCode
+    }
 }
 
 struct ListeningIndicatorView: View {
@@ -701,24 +840,36 @@ struct ListeningIndicatorView: View {
             WaveformVisualizerView(audioLevel: appState.currentAudioLevel)
             
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("ESC to cancel")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                // ESC instruction only shown in toggle mode.
+                // During hold mode, the user's hand is on the hotkey and can't reach ESC.
+                if appState.recordingIsToggleMode {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("ESC to cancel")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.black.opacity(0.7))
+                    )
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.black.opacity(0.7))
-                )
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("\(appState.getCurrentShortcutString()) to stop")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                    // During hold: "Release ⌘⇧Space to stop"
+                    // During toggle: "⌘⇧Space to stop"
+                    if appState.recordingIsToggleMode {
+                        Text("\(appState.getCurrentShortcutString()) to stop")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                    } else {
+                        Text("Release \(appState.getCurrentPTTShortcutString()) to stop")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

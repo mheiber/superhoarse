@@ -86,8 +86,11 @@ swift test --filter DictationBugReproductionTests
 
 **HotKeyManager (`Sources/HotKeyManager.swift`)** - Global keyboard shortcuts
 - Registers system-wide hotkeys using Carbon framework
-- Default: ⌘⇧Space (configurable via UserDefaults)
-- Supports multiple modifier combinations (Cmd+Shift, Cmd+Option, etc.)
+- Handles BOTH key-down (`kEventHotKeyPressed`) AND key-up (`kEventHotKeyReleased`) events
+- Supports two configurable trigger keys: TRIGGER KEY (toggle) and TRIGGER PUSH-TO-TALK (PTT)
+- When both keys are the same (default), registers one Carbon hotkey with `.shared` identity
+- When keys differ, registers two separate Carbon hotkeys with `.toggle` and `.ptt` identities
+- Default: ⌘⇧Space for both (configurable via UserDefaults)
 - Dynamically updates hotkey registration when settings change
 
 **SuperhoarseApp (`Sources/main.swift`)** - App lifecycle and UI
@@ -137,3 +140,66 @@ Use `./test-coverage.sh` to generate detailed coverage reports. Tests exclude ap
 ## User flows
 
 - Remember to always update @user_flows.md When we make a change that affects user workflows.
+
+## Push-to-Talk / Hold-to-Record Architecture
+
+**IMPORTANT: Read this before modifying the hotkey or recording logic.**
+
+The app supports two recording modes using the same or different hotkeys:
+
+### How it works
+
+1. **Hold-to-record (PTT)**: Hold the hotkey while speaking. Release to stop and transcribe.
+2. **Tap-to-toggle**: Quick-press the hotkey to start recording. Press again to stop.
+
+### Same key for both (default behavior)
+
+When TRIGGER KEY and TRIGGER PUSH-TO-TALK are the same (the default), the app uses
+**timing-based disambiguation** on key-up:
+
+- Key-down → start recording immediately
+- Key-up after **< 200ms** → this was a **tap** → stay recording, enter toggle mode
+- Key-up after **>= 200ms** → this was a **hold** → stop recording, transcribe
+
+The 200ms threshold comes from whisper.cpp's `talk.cpp` reference implementation.
+A normal intentional tap is 100-150ms. Holding to say even a short word ("yes") takes 400ms+.
+
+### Different keys (no ambiguity)
+
+When the user sets different keys for toggle vs PTT in settings, there is no timing
+ambiguity. The toggle key always toggles. The PTT key always holds.
+
+### Escape key behavior
+
+- **During hold** (key physically down): ESC is NOT monitored. The user's hand is
+  on the hotkey and can't easily reach ESC.
+- **During toggle mode** (after a tap): ESC IS monitored and cancels recording.
+  Both hands are free.
+
+### Listening indicator instructions
+
+The floating listening indicator shows different instructions depending on mode:
+- Hold mode: "Release ⌘⇧Space to stop" (no ESC instruction)
+- Toggle mode: "ESC to cancel" + "⌘⇧Space to stop"
+
+### Key files
+
+- `Sources/HotKeyManager.swift` — Carbon event registration, key-down/key-up dispatch
+- `Sources/AppState.swift` — Smart hold/toggle logic, 200ms threshold, recording state
+- `Sources/ContentView.swift` — Listening indicator UI, settings UI for both trigger keys
+
+### UserDefaults keys for hotkeys
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `hotKeyModifier` | Int | 0 | Modifier combo (shared by both keys) |
+| `hotKeyCode` | Int | 49 | Toggle trigger key (Carbon key code) |
+| `hotKeyCodePTT` | Int | 0 | PTT trigger key (0 = use same as hotKeyCode) |
+
+### Common pitfalls
+
+- **Don't remove key-up handling** from HotKeyManager. It's essential for PTT.
+- **Don't start ESC monitoring during hold mode**. User can't reach ESC while holding.
+- **The 200ms threshold is intentional**. Don't change it without testing both modes.
+- **hotKeyCodePTT == 0 means "same as toggle key"**, not "no PTT key". This is how
+  UserDefaults works (returns 0 for unset integers).

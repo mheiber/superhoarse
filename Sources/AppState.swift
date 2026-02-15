@@ -114,10 +114,56 @@ class GlobalEscapeKeyMonitor {
     }
 }
 
+// =============================================================================
+// AppState: Smart Hold-to-Record (PTT) + Tap-to-Toggle Recording
+// =============================================================================
+//
+// RECORDING MODE LOGIC (READ THIS BEFORE MODIFYING):
+//
+// This app supports TWO ways to record, using the same or different hotkeys:
+//
+//   1. HOLD-TO-RECORD (Push-to-Talk / PTT):
+//      User holds the hotkey while speaking. Recording stops when they release.
+//
+//   2. TAP-TO-TOGGLE:
+//      User taps the hotkey once to start recording, taps again to stop.
+//
+// HOW IT WORKS — TWO SCENARIOS:
+//
+// SCENARIO A: Toggle key and PTT key are the SAME (default)
+//   - On key-down: start recording immediately.
+//   - On key-up: check how long the key was held.
+//     - If held >= 200ms (holdThreshold): this was a HOLD → stop recording.
+//     - If held < 200ms: this was a TAP → keep recording, enter toggle mode.
+//   - In toggle mode: next key-down stops recording. ESC cancels.
+//   - The 200ms threshold comes from whisper.cpp's talk.cpp reference implementation.
+//     A normal intentional tap is 100-150ms; holding to say even "yes" takes 400ms+.
+//
+// SCENARIO B: Toggle key and PTT key are DIFFERENT
+//   - No timing ambiguity. Each key has exactly one behavior.
+//   - Toggle key down: if recording → stop; if not → start (toggle mode).
+//   - Toggle key up: ignored.
+//   - PTT key down: start recording.
+//   - PTT key up: stop recording (regardless of hold duration).
+//
+// ESCAPE KEY BEHAVIOR:
+//   - In toggle mode (after a tap), ESC cancels recording. Both hands are free.
+//   - During hold (key is physically down), ESC is NOT monitored because the
+//     user's hand is occupied holding the hotkey and can't easily reach ESC.
+//   - The escape monitor starts only when we enter toggle mode.
+//
+// UI FEEDBACK (see ListeningIndicatorView in ContentView.swift):
+//   - While holding (before we know if it's hold or toggle):
+//     Shows "Release {hotkey} to stop" — no ESC instruction.
+//   - After tap (toggle mode):
+//     Shows "ESC to cancel" + "{hotkey} to stop" — both hands are free.
+//
+// =============================================================================
+
 @MainActor
 class AppState: ObservableObject {
     static let shared = AppState()
-    
+
     @Published var isRecording = false
     @Published var transcriptionText = ""
     @Published var isInitialized = false
@@ -133,7 +179,26 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(copyToClipboard, forKey: "copyToClipboard")
         }
     }
-    
+
+    // -- Hold/Toggle state --
+    // When true, the user tapped (< 200ms) and we're in toggle mode.
+    // When false, the user is either holding or not recording.
+    // The listening indicator uses this to decide which instructions to show.
+    @Published var recordingIsToggleMode = false
+
+    // Tracks whether the hotkey is physically held down right now.
+    // Used to prevent re-triggering on key-repeat events from the OS.
+    private var isHolding = false
+
+    // Timestamp of the most recent key-down event, used to measure hold duration.
+    private var keyDownTime: Date? = nil
+
+    // Threshold in seconds to distinguish a tap from a hold.
+    // < 200ms = tap (toggle mode), >= 200ms = hold (PTT mode).
+    // This value comes from whisper.cpp's talk.cpp reference implementation.
+    // See CLAUDE.md for rationale.
+    private let holdThreshold: TimeInterval = 0.2
+
     private var hotKeyManager: HotKeyManager?
     private var permissionCheckTimer: Timer?
     var audioRecorder: AudioRecorder?
@@ -143,7 +208,7 @@ class AppState: ObservableObject {
     }
     private var audioLevelCancellable: AnyCancellable?
     private var escapeKeyMonitor: GlobalEscapeKeyMonitor?
-    
+
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppState")
     
     deinit {
@@ -166,9 +231,10 @@ class AppState: ObservableObject {
     }
     
     private func setupHotKeyManager() {
-        hotKeyManager = HotKeyManager { [weak self] in
-            self?.toggleRecording()
-        }
+        hotKeyManager = HotKeyManager(
+            onKeyDown: { [weak self] identity in self?.handleKeyDown(identity) },
+            onKeyUp: { [weak self] identity in self?.handleKeyUp(identity) }
+        )
     }
     
     private func setupAudioRecorder() {
@@ -197,27 +263,133 @@ class AppState: ObservableObject {
         }
     }
     
+    // =========================================================================
+    // Key Event Handlers
+    // =========================================================================
+    // These are called by HotKeyManager when the user presses/releases a hotkey.
+    // The HotKeyIdentity tells us which key was involved:
+    //   .shared — toggle and PTT are the same key, use timing to disambiguate
+    //   .toggle — dedicated toggle key, always toggles
+    //   .ptt    — dedicated PTT key, always hold-to-record
+
+    func handleKeyDown(_ identity: HotKeyIdentity) {
+        logger.info("Key down: identity=\(String(describing: identity)), isRecording=\(self.isRecording), isHolding=\(self.isHolding), toggleMode=\(self.recordingIsToggleMode)")
+
+        switch identity {
+        case .shared:
+            // Same key for both modes. Behavior depends on current state.
+            if isRecording && recordingIsToggleMode {
+                // We're in toggle mode and user pressed again → stop recording.
+                stopRecording()
+            } else if !isRecording {
+                // Not recording → start. We don't know yet if this is a tap or hold.
+                // We'll find out in handleKeyUp based on timing.
+                keyDownTime = Date()
+                isHolding = true
+                recordingIsToggleMode = false
+                startRecording(startEscapeMonitor: false) // Don't start ESC monitor during hold
+            }
+            // If isRecording && !recordingIsToggleMode && isHolding:
+            // This is a key-repeat event from the OS. Ignore it.
+
+        case .toggle:
+            // Dedicated toggle key — always toggles, no timing logic needed.
+            if isRecording {
+                stopRecording()
+            } else {
+                recordingIsToggleMode = true
+                isHolding = false
+                startRecording(startEscapeMonitor: true)
+            }
+
+        case .ptt:
+            // Dedicated PTT key — always hold-to-record. Key-up stops it.
+            if !isRecording {
+                isHolding = true
+                recordingIsToggleMode = false
+                startRecording(startEscapeMonitor: false)
+            }
+            // If already recording (key repeat), ignore.
+        }
+    }
+
+    func handleKeyUp(_ identity: HotKeyIdentity) {
+        logger.info("Key up: identity=\(String(describing: identity)), isRecording=\(self.isRecording), isHolding=\(self.isHolding)")
+
+        switch identity {
+        case .shared:
+            guard isRecording, isHolding else { return }
+            isHolding = false
+
+            // Measure how long the key was held to decide: was this a tap or a hold?
+            let elapsed = keyDownTime.map { Date().timeIntervalSince($0) } ?? 1.0
+
+            if elapsed >= holdThreshold {
+                // Held for >= 200ms → this was a HOLD. Stop recording now.
+                logger.info("Hold detected (\(String(format: "%.0f", elapsed * 1000))ms) — stopping recording")
+                stopRecording()
+            } else {
+                // Released quickly (< 200ms) → this was a TAP. Enter toggle mode.
+                // Recording continues. User will press again to stop, or ESC to cancel.
+                logger.info("Tap detected (\(String(format: "%.0f", elapsed * 1000))ms) — entering toggle mode")
+                recordingIsToggleMode = true
+                // Now start escape key monitoring since both hands are free.
+                startEscapeKeyMonitoring()
+            }
+
+        case .toggle:
+            // Dedicated toggle key — key-up is irrelevant for toggle behavior.
+            break
+
+        case .ptt:
+            // Dedicated PTT key — release always stops recording.
+            if isRecording {
+                isHolding = false
+                stopRecording()
+            }
+        }
+    }
+
+    // Keep toggleRecording() as a convenience for the UI record/stop button.
     func toggleRecording() {
         logger.info("Toggle recording called. Currently recording: \(self.isRecording)")
         if isRecording {
             stopRecording()
         } else {
-            startRecording()
+            recordingIsToggleMode = true
+            startRecording(startEscapeMonitor: true)
         }
     }
-    
-    private func startRecording() {
+
+    private func startRecording(startEscapeMonitor: Bool = true) {
         guard !isRecording else { return }
-        
+
         logger.info("Starting recording...")
-        
+
         // Ensure audio recorder is in a good state before starting
         if audioRecorder == nil {
             logger.warning("Audio recorder was nil, recreating...")
             setupAudioRecorder()
         }
-        
-        // Start global escape key monitoring
+
+        // Only start escape key monitoring if requested.
+        // During hold-to-record, we DON'T monitor ESC because the user's hand
+        // is occupied holding the hotkey. ESC monitoring starts later if the
+        // key-up reveals this was actually a tap (toggle mode).
+        if startEscapeMonitor {
+            startEscapeKeyMonitoring()
+        }
+
+        audioRecorder?.startRecording()
+        isRecording = true
+        showListeningIndicator = true
+        transcriptionText = ""
+    }
+
+    /// Starts the global escape key monitor. Separated out so it can be called
+    /// either at recording start (toggle mode) or deferred until after key-up
+    /// reveals a tap (shared key mode).
+    private func startEscapeKeyMonitoring() {
         if escapeKeyMonitor == nil {
             escapeKeyMonitor = GlobalEscapeKeyMonitor()
         }
@@ -226,21 +398,21 @@ class AppState: ObservableObject {
                 self?.cancelRecording()
             }
         }
-        
-        audioRecorder?.startRecording()
-        isRecording = true
-        showListeningIndicator = true
-        transcriptionText = ""
     }
-    
+
     private func stopRecording() {
         guard isRecording else { return }
-        
+
         logger.info("Stopping recording...")
-        
+
         // Stop escape key monitoring
         escapeKeyMonitor?.stopMonitoring()
-        
+
+        // Reset hold/toggle state
+        isHolding = false
+        recordingIsToggleMode = false
+        keyDownTime = nil
+
         audioRecorder?.stopRecording { [weak self] audioData in
             Task {
                 await self?.processAudio(audioData)
@@ -248,7 +420,7 @@ class AppState: ObservableObject {
         }
         isRecording = false
         showListeningIndicator = false
-        
+
     }
     
     private func processAudio(_ audioData: Data?) async {
@@ -467,10 +639,26 @@ class AppState: ObservableObject {
     func getCurrentShortcutString() -> String {
         let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
         let keyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
-        
+
         let modifierString = HotkeyConfiguration.getModifierSymbol(for: modifierValue)
         let keyString = HotkeyConfiguration.getKeyName(for: keyCodeValue > 0 ? keyCodeValue : 49)
-        
+
+        return "\(modifierString)\(keyString)"
+    }
+
+    /// Returns the display string for the PTT hotkey (e.g., "⌘⇧Space").
+    /// When the PTT key is not explicitly set (UserDefaults returns 0),
+    /// falls back to the toggle key — which is the default "same key" config.
+    func getCurrentPTTShortcutString() -> String {
+        let modifierValue = UserDefaults.standard.integer(forKey: "hotKeyModifier")
+        let pttKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCodePTT")
+        let toggleKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
+
+        let modifierString = HotkeyConfiguration.getModifierSymbol(for: modifierValue)
+        // Fall back to toggle key if PTT key is not explicitly set
+        let effectivePTTCode = pttKeyCodeValue > 0 ? pttKeyCodeValue : (toggleKeyCodeValue > 0 ? toggleKeyCodeValue : 49)
+        let keyString = HotkeyConfiguration.getKeyName(for: effectivePTTCode)
+
         return "\(modifierString)\(keyString)"
     }
     
@@ -489,10 +677,15 @@ class AppState: ObservableObject {
     func cancelRecording() {
         if isRecording {
             logger.info("Recording cancelled by user")
-            
+
             // Stop escape key monitoring
             escapeKeyMonitor?.stopMonitoring()
-            
+
+            // Reset hold/toggle state
+            isHolding = false
+            recordingIsToggleMode = false
+            keyDownTime = nil
+
             audioRecorder?.stopRecording { _ in
                 // Discard the audio data when cancelled
             }
