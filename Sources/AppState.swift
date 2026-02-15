@@ -510,9 +510,24 @@ class AppState: ObservableObject {
 
         // Insert text at cursor position only if we have permission
         if hasAccessibilityPermission {
-            logger.info("Inserting text at cursor...")
-            let sanitizedText = sanitizeTextForInsertion(text)
-            insertTextAtCursor(sanitizedText)
+            let readiness = checkInsertionReadiness()
+            switch readiness {
+            case .ready:
+                logger.info("Inserting text at cursor...")
+                let sanitizedText = sanitizeTextForInsertion(text)
+                insertTextAtCursor(sanitizedText)
+            case .noFocusedElement:
+                logger.info("No focused text element found. Text saved in settings for recovery.")
+                showAccessibilityNotification = true
+            case .notEditable:
+                logger.info("Focused element is not editable. Text saved in settings for recovery.")
+                showAccessibilityNotification = true
+            case .axError:
+                // AX query failed (app may not support AX but might still accept keystrokes)
+                logger.info("AX pre-check inconclusive, attempting insertion anyway...")
+                let sanitizedText = sanitizeTextForInsertion(text)
+                insertTextAtCursor(sanitizedText)
+            }
         } else if copyToClipboard {
             logger.info("Accessibility permission denied. Showing paste notification instead.")
             showPasteNotification = true
@@ -707,6 +722,81 @@ class AppState: ObservableObject {
         logger.info("Switched speech engine to \(engineType.displayName)")
     }
     
+    enum InsertionReadiness {
+        case ready            // Focused element is a writable text field
+        case noFocusedElement // Nothing focused (desktop, etc.)
+        case notEditable      // Focused element exists but is not text-editable
+        case axError          // AX query failed (app not accessible, hung, etc.)
+    }
+
+    private func checkInsertionReadiness() -> InsertionReadiness {
+        let systemWide = AXUIElementCreateSystemWide()
+        var focusedElement: AnyObject?
+        let result = AXUIElementCopyAttributeValue(
+            systemWide,
+            kAXFocusedUIElementAttribute as CFString,
+            &focusedElement
+        )
+
+        switch result {
+        case .success:
+            break
+        case .noValue:
+            logger.info("AX pre-check: no focused element")
+            return .noFocusedElement
+        default:
+            logger.info("AX pre-check: query returned error \(result.rawValue)")
+            return .axError
+        }
+
+        guard let element = focusedElement else {
+            return .noFocusedElement
+        }
+
+        // Get the role of the focused element
+        var roleValue: AnyObject?
+        AXUIElementCopyAttributeValue(
+            element as! AXUIElement,
+            kAXRoleAttribute as CFString,
+            &roleValue
+        )
+        let role = roleValue as? String ?? ""
+        logger.info("AX pre-check: focused element role = \(role)")
+
+        // Known text-accepting roles
+        let textRoles: Set<String> = [
+            "AXTextField", "AXTextArea", "AXComboBox", "AXWebArea"
+        ]
+        if textRoles.contains(role) {
+            return .ready
+        }
+
+        // For other roles, check if AXValue is settable (indicates editable content)
+        var settable: DarwinBoolean = false
+        let settableResult = AXUIElementIsAttributeSettable(
+            element as! AXUIElement,
+            kAXValueAttribute as CFString,
+            &settable
+        )
+        if settableResult == .success && settable.boolValue {
+            return .ready
+        }
+
+        // Also check AXSelectedText settability (e.g. some custom editors)
+        var selectedTextSettable: DarwinBoolean = false
+        let stResult = AXUIElementIsAttributeSettable(
+            element as! AXUIElement,
+            kAXSelectedTextAttribute as CFString,
+            &selectedTextSettable
+        )
+        if stResult == .success && selectedTextSettable.boolValue {
+            return .ready
+        }
+
+        logger.info("AX pre-check: focused element is not editable (role: \(role))")
+        return .notEditable
+    }
+
     private func insertTextAtCursor(_ text: String) {
         guard hasAccessibilityPermission else {
             logger.error("Cannot insert text: Accessibility permission not granted")
