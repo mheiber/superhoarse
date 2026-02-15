@@ -1091,6 +1091,66 @@ struct AppPreferencesView: View {
                     Toggle("", isOn: $appState.copyToClipboard)
                         .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.0, green: 1.0, blue: 0.5)))
                 }
+
+                // Input Device Setting
+                HStack {
+                    Text("INPUT DEVICE:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
+
+                    Spacer()
+
+                    Menu {
+                        Button(action: {
+                            appState.selectedAudioDeviceUID = nil
+                        }) {
+                            HStack {
+                                Text("System Default")
+                                if appState.selectedAudioDeviceUID == nil {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        ForEach(appState.availableAudioDevices) { device in
+                            Button(action: {
+                                appState.selectedAudioDeviceUID = device.uid
+                            }) {
+                                HStack {
+                                    Text(device.name)
+                                    if appState.selectedAudioDeviceUID == device.uid {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(selectedDeviceName)
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.black.opacity(0.4))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 0.0, green: 1.0, blue: 0.5).opacity(0.6), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    .fixedSize()
+                }
             }
         }
         .padding(16)
@@ -1131,9 +1191,17 @@ struct AppPreferencesView: View {
     private func updateDockVisibility(showInDock: Bool) {
         let newPolicy: NSApplication.ActivationPolicy = showInDock ? .regular : .accessory
         NSApp.setActivationPolicy(newPolicy)
-        
+
         // Store the preference for use on next launch
         UserDefaults.standard.set(showInDock, forKey: "showInDock")
+    }
+
+    private var selectedDeviceName: String {
+        if let uid = appState.selectedAudioDeviceUID,
+           let device = appState.availableAudioDevices.first(where: { $0.uid == uid }) {
+            return device.name.uppercased()
+        }
+        return "SYSTEM DEFAULT"
     }
 }
 

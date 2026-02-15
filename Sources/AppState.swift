@@ -179,6 +179,13 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(copyToClipboard, forKey: "copyToClipboard")
         }
     }
+    @Published var availableAudioDevices: [AudioInputDevice] = []
+    @Published var selectedAudioDeviceUID: String? = UserDefaults.standard.string(forKey: "selectedAudioInputDeviceUID") {
+        didSet {
+            UserDefaults.standard.set(selectedAudioDeviceUID, forKey: "selectedAudioInputDeviceUID")
+            audioRecorder?.selectedDeviceUID = selectedAudioDeviceUID
+        }
+    }
 
     // -- Hold/Toggle state --
     // When true, the user tapped (< 200ms) and we're in toggle mode.
@@ -208,6 +215,7 @@ class AppState: ObservableObject {
     }
     private var audioLevelCancellable: AnyCancellable?
     private var escapeKeyMonitor: GlobalEscapeKeyMonitor?
+    private var deviceObservers: [Any] = []
 
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppState")
     
@@ -220,7 +228,9 @@ class AppState: ObservableObject {
         updateAccessibilityPermission()
         setupHotKeyManager()
         setupAudioRecorder()
-        
+        refreshAudioDevices()
+        setupDeviceChangeObservers()
+
         // Start continuous permission monitoring to detect grant/revoke changes
         startPermissionMonitoring()
         
@@ -239,7 +249,8 @@ class AppState: ObservableObject {
     
     private func setupAudioRecorder() {
         audioRecorder = AudioRecorder()
-        
+        audioRecorder?.selectedDeviceUID = selectedAudioDeviceUID
+
         // Subscribe to audio level changes
         audioLevelCancellable = audioRecorder?.$currentAudioLevel
             .receive(on: DispatchQueue.main)
@@ -720,6 +731,43 @@ class AppState: ObservableObject {
         currentSpeechEngine = engineType
         UserDefaults.standard.set(engineType.rawValue, forKey: "speechEngine")
         logger.info("Switched speech engine to \(engineType.displayName)")
+    }
+
+    // MARK: - Audio Device Management
+
+    func refreshAudioDevices() {
+        availableAudioDevices = AudioRecorder.availableInputDevices()
+
+        // If the selected device is no longer available, reset to system default
+        if let selected = selectedAudioDeviceUID,
+           !availableAudioDevices.contains(where: { $0.uid == selected }) {
+            logger.info("Selected audio device no longer available, resetting to system default")
+            selectedAudioDeviceUID = nil
+        }
+    }
+
+    private func setupDeviceChangeObservers() {
+        let connected = NotificationCenter.default.addObserver(
+            forName: .AVCaptureDeviceWasConnected,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshAudioDevices()
+            }
+        }
+
+        let disconnected = NotificationCenter.default.addObserver(
+            forName: .AVCaptureDeviceWasDisconnected,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshAudioDevices()
+            }
+        }
+
+        deviceObservers = [connected, disconnected]
     }
     
     enum InsertionReadiness {

@@ -278,6 +278,24 @@
    - Notification shows "ACCESSIBILITY REQUIRED" and "Open Settings to grant permission"
 6. Setting persists across app restarts
 
+### Input Device Setting
+1. Open settings window
+2. Navigate to "APP PREFERENCES" section
+3. Click "INPUT DEVICE" dropdown (default: "SYSTEM DEFAULT")
+4. Dropdown shows "System Default" at the top, followed by a divider, then all available audio input devices
+5. Select a specific device (e.g., "MacBook Pro Microphone", "USB Condenser Microphone")
+6. Next recording uses the selected device
+7. When "System Default" is selected (default):
+   - App uses whatever macOS has set as the default input device
+   - Automatically follows system changes (e.g., plugging in a headset switches to headset mic)
+   - This is the "just works" behavior
+8. When a specific device is selected:
+   - App always uses that device regardless of system default changes
+   - If the selected device is disconnected, app automatically resets to "System Default"
+   - Dropdown label updates to reflect the reset
+9. Device list updates automatically when devices are connected/disconnected
+10. Setting persists across app restarts
+
 ## Test Data Scenarios
 
 ### Audio Content

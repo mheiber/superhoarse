@@ -79,10 +79,13 @@ swift test --filter DictationBugReproductionTests
 - Filters short recordings (<0.5s) and silent audio
 
 **AudioRecorder (`Sources/AudioRecorder.swift`)** - Audio capture and processing
-- Records 16kHz mono PCM audio optimized for speech recognition
-- Provides real-time audio level monitoring for UI feedback
+- Uses AVAudioEngine for recording with optional input device selection
+- Records 16kHz mono PCM audio optimized for speech recognition (via AVAudioConverter)
+- Supports selecting a specific input device via CoreAudio (`kAudioOutputUnitProperty_CurrentDevice`)
+- When no device is selected (default), uses the system default input (same "just works" behavior)
+- Provides real-time audio level monitoring from tap buffer RMS calculation
 - Handles temporary file creation and cleanup automatically
-- Uses AVFoundation with proper microphone permission handling
+- Device enumeration via `AVCaptureDevice.DiscoverySession`
 
 **HotKeyManager (`Sources/HotKeyManager.swift`)** - Global keyboard shortcuts
 - Registers system-wide hotkeys using Carbon framework
@@ -196,6 +199,7 @@ The floating listening indicator shows different instructions depending on mode:
 | `hotKeyModifierPTT` | Int | -1 | PTT modifier combo (-1 = use same as hotKeyModifier) |
 | `hotKeyCode` | Int | 49 | Toggle trigger key (Carbon key code) |
 | `hotKeyCodePTT` | Int | 0 | PTT trigger key (0 = use same as hotKeyCode) |
+| `selectedAudioInputDeviceUID` | String? | nil | Audio input device UID. nil = system default. |
 
 ### Common pitfalls
 
