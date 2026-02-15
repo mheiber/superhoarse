@@ -781,10 +781,10 @@ struct KeyboardShortcutConfigView: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(Color(red: 0.0, green: 0.8, blue: 1.0))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Hold \(appState.getCurrentPTTShortcutString()) while speaking.")
+                            Text("Press \(appState.getCurrentPTTShortcutString()), keep holding \(appState.getCurrentPTTKeyName()).")
                                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                                 .foregroundColor(.white.opacity(0.8))
-                            Text("Release to stop and transcribe.")
+                            Text("Release \(appState.getCurrentPTTKeyName()) to stop and transcribe.")
                                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                                 .foregroundColor(.white.opacity(0.6))
                         }
@@ -875,14 +875,14 @@ struct ListeningIndicatorView: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    // During hold: "Release ⌘⇧Space to stop"
+                    // During hold: "Hold Space — release to stop"
                     // During toggle: "⌘⇧Space to stop"
                     if appState.recordingIsToggleMode {
                         Text("\(appState.getCurrentShortcutString()) to stop")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
                     } else {
-                        Text("Release \(appState.getCurrentPTTShortcutString()) to stop")
+                        Text("Hold \(appState.getCurrentPTTKeyName()) — release to stop")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
                     }

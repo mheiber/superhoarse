@@ -45,7 +45,7 @@
 ### Hold-to-Record (Push-to-Talk) Path
 1. Press and HOLD hotkey (default: ⌘⇧Space)
 2. Listening indicator appears (floating window, top of screen)
-3. Listening indicator shows: "Release ⌘⇧Space to stop" (no ESC instruction)
+3. Listening indicator shows: "Hold Space — release to stop" (no ESC instruction)
 4. Speak while holding the key
 5. Release the hotkey (after holding >= 200ms)
 6. Listening indicator disappears

@@ -694,6 +694,16 @@ class AppState: ObservableObject {
 
         return "\(modifierString)\(keyString)"
     }
+
+    /// Returns just the trigger key name for the PTT hotkey (e.g., "Space"),
+    /// without modifier symbols. Used to show that only the trigger key needs
+    /// to be held during push-to-talk — modifiers can be released.
+    func getCurrentPTTKeyName() -> String {
+        let pttKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCodePTT")
+        let toggleKeyCodeValue = UserDefaults.standard.integer(forKey: "hotKeyCode")
+        let effectivePTTCode = pttKeyCodeValue > 0 ? pttKeyCodeValue : (toggleKeyCodeValue > 0 ? toggleKeyCodeValue : 49)
+        return HotkeyConfiguration.getKeyName(for: effectivePTTCode)
+    }
     
     func hideListeningIndicator() {
         showListeningIndicator = false

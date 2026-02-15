@@ -182,7 +182,7 @@ there is no timing ambiguity. The toggle key always toggles. The PTT key always 
 ### Listening indicator instructions
 
 The floating listening indicator shows different instructions depending on mode:
-- Hold mode: "Release ⌘⇧Space to stop" (no ESC instruction)
+- Hold mode: "Hold Space — release to stop" (no ESC instruction)
 - Toggle mode: "ESC to cancel" + "⌘⇧Space to stop"
 
 ### Key files
