@@ -143,6 +143,7 @@ struct HeaderView: View {
 struct RecordingStatusView: View {
     @EnvironmentObject var appState: AppState
     @State private var pulseAnimation: Bool = false
+    @State private var showCopiedFeedback: Bool = false
     
     var body: some View {
         VStack(spacing: 12) {
@@ -213,6 +214,26 @@ struct RecordingStatusView: View {
                                 .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
                                 .tracking(0.5)
                         }
+
+                        // Copy to clipboard button
+                        Button(action: {
+                            let pasteboard = NSPasteboard.general
+                            pasteboard.clearContents()
+                            pasteboard.setString(appState.transcriptionText, forType: .string)
+                            showCopiedFeedback = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                showCopiedFeedback = false
+                            }
+                        }) {
+                            Image(systemName: showCopiedFeedback ? "checkmark.circle.fill" : "doc.on.clipboard")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(showCopiedFeedback ?
+                                    Color(red: 0.0, green: 1.0, blue: 0.5) :
+                                    .white.opacity(0.5))
+                                .animation(.easeInOut(duration: 0.2), value: showCopiedFeedback)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Copy to clipboard")
                     }
                     
                     ScrollView {

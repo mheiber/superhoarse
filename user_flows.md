@@ -109,8 +109,12 @@
 - ⚡ Purple "OPEN SETTINGS" = has accessibility permission
 - ⚠️ Orange "OPEN SETTINGS" = missing accessibility permission
 
-### Menu Actions
-1. Click menu bar icon
+### Click Behavior
+- **Left-click** menu bar icon → opens settings window directly
+- **Right-click** menu bar icon → shows dropdown menu
+
+### Menu Actions (Right-Click)
+1. Right-click menu bar icon
 2. Menu shows: "OPEN SETTINGS", separator, "QUIT SUPERHOARSE"
 3. Click "OPEN SETTINGS" → opens settings window
 4. Click "QUIT SUPERHOARSE" → terminates app

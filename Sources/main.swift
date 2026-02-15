@@ -19,6 +19,7 @@ struct SuperhoarseApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
+    private var statusItemMenu: NSMenu?
     private var settingsMenuItem: NSMenuItem?
     private var settingsWindow: NSWindow?
     private var listeningIndicatorWindow: NSWindow?
@@ -82,7 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // COVERAGE_EXCLUDE_START - Menu bar and UI setup requires running macOS app to test
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        
+
         if let button = statusItem?.button {
             // Create a custom icon with synthwave colors
             let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .bold)
@@ -91,20 +92,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 micImage.isTemplate = false
                 button.image = micImage
             }
-            button.toolTip = "🎙️ SUPERHOARSE - AI Speech Recognition"
+            button.toolTip = "SUPERHOARSE - AI Speech Recognition"
+
+            // Left-click opens settings directly
+            button.action = #selector(statusItemClicked(_:))
+            button.target = self
+
+            // Right-click shows the context menu
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
-        
+
+        // Build the right-click menu (not assigned to statusItem.menu so left-click is free)
         let menu = NSMenu()
-        
-        // Style the menu with dark background
         menu.appearance = NSAppearance(named: .darkAqua)
-        
-        // Create menu items with synthwave styling - will be updated based on permissions
+
         settingsMenuItem = NSMenuItem(title: "OPEN SETTINGS", action: #selector(openSettings), keyEquivalent: "")
-        // Initial text will be set by updateMenuBarIcon
-        
+
         let separatorItem = NSMenuItem.separator()
-        
+
         let quitItem = NSMenuItem(title: "QUIT SUPERHOARSE", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quitItem.attributedTitle = NSAttributedString(
             string: "QUIT SUPERHOARSE",
@@ -113,12 +118,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .foregroundColor: NSColor.systemRed
             ]
         )
-        
+
         menu.addItem(settingsMenuItem!)
         menu.addItem(separatorItem)
         menu.addItem(quitItem)
-        
-        statusItem?.menu = menu
+
+        statusItemMenu = menu
+    }
+
+    @MainActor
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else { return }
+        if event.type == .rightMouseUp {
+            // Right-click: show the context menu
+            statusItem?.menu = statusItemMenu
+            statusItem?.button?.performClick(nil)
+            // Remove menu so left-click works next time
+            DispatchQueue.main.async { [weak self] in
+                self?.statusItem?.menu = nil
+            }
+        } else {
+            // Left-click: open settings directly
+            openSettings()
+        }
     }
     // COVERAGE_EXCLUDE_END
     
