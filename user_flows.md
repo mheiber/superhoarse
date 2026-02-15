@@ -93,8 +93,9 @@
 1. Record audio successfully
 2. Text transcribed but NOT copied to clipboard
 3. Accessibility notification window appears (center screen)
-4. Shows "ACCESSIBILITY REQUIRED" with "Open Settings to grant permission"
-5. Notification dismisses after timeout or click
+4. Shows "ACCESSIBILITY REQUIRED" with "Grant permission to insert text"
+5. "OPEN SETTINGS" button opens settings window directly
+6. Notification auto-dismisses after 5 seconds, or on tap, or after clicking button
 
 ### No Microphone Permission
 1. Hotkey pressed

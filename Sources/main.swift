@@ -178,6 +178,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.toggleAccessibilityNotification(show)
             }
             .store(in: &cancellables)
+
+        appState.$shouldOpenSettings
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] shouldOpen in
+                if shouldOpen {
+                    self?.appState?.shouldOpenSettings = false
+                    self?.openSettings()
+                }
+            }
+            .store(in: &cancellables)
         
         appState.$hasAccessibilityPermission
             .receive(on: DispatchQueue.main)

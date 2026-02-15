@@ -64,10 +64,37 @@ struct AccessibilityNotificationView: View {
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.0))
 
-                Text("Open Settings to grant permission")
+                Text("Grant permission to insert text")
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
                     .foregroundColor(.white.opacity(0.7))
             }
+
+            // Open Settings button
+            Button(action: {
+                appState.shouldOpenSettings = true
+                dismissNotification()
+            }) {
+                Text("OPEN SETTINGS")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color(red: 1.0, green: 0.5, blue: 0.0),
+                                        Color(red: 1.0, green: 0.3, blue: 0.0)
+                                    ]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    )
+                    .shadow(color: Color(red: 1.0, green: 0.5, blue: 0.0).opacity(0.4), radius: 8)
+            }
+            .buttonStyle(.plain)
         }
         .frame(minWidth: 300)
         .padding(30)
@@ -111,8 +138,8 @@ struct AccessibilityNotificationView: View {
             floatAnimation = true
             startGlowAnimation()
 
-            // Auto-dismiss after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            // Auto-dismiss after 5 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                 dismissNotification()
             }
         }

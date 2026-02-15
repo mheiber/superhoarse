@@ -125,6 +125,7 @@ class AppState: ObservableObject {
     @Published var showListeningIndicator = false
     @Published var showPasteNotification = false
     @Published var showAccessibilityNotification = false
+    @Published var shouldOpenSettings = false
     @Published var currentAudioLevel: Float = 0.0
     @Published var currentSpeechEngine: SpeechEngineType = .parakeet
     @Published var copyToClipboard: Bool = UserDefaults.standard.object(forKey: "copyToClipboard") as? Bool ?? false {
