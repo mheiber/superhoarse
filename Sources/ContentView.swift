@@ -204,13 +204,15 @@ struct RecordingStatusView: View {
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.6))
                             .tracking(1)
-                        
+
                         Spacer()
-                        
-                        Text("COPIED TO CLIPBOARD")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
-                            .tracking(0.5)
+
+                        if appState.copyToClipboard {
+                            Text("COPIED TO CLIPBOARD")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(Color(red: 0.0, green: 1.0, blue: 0.5))
+                                .tracking(0.5)
+                        }
                     }
                     
                     ScrollView {
@@ -846,6 +848,7 @@ struct SelectableTextView: View {
 struct AppPreferencesView: View {
     @AppStorage("launchAtStartup") private var launchAtStartup: Bool = false
     @AppStorage("showInDock") private var showInDock: Bool = true
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         VStack(spacing: 16) {
@@ -879,14 +882,26 @@ struct AppPreferencesView: View {
                     Text("SHOW IN DOCK:")
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundColor(.white.opacity(0.7))
-                    
+
                     Spacer()
-                    
+
                     Toggle("", isOn: $showInDock)
                         .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.0, green: 1.0, blue: 0.5)))
                         .onChange(of: showInDock) { newValue in
                             updateDockVisibility(showInDock: newValue)
                         }
+                }
+
+                // Copy to Clipboard Setting
+                HStack {
+                    Text("COPY TO CLIPBOARD:")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.7))
+
+                    Spacer()
+
+                    Toggle("", isOn: $appState.copyToClipboard)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.0, green: 1.0, blue: 0.5)))
                 }
             }
         }

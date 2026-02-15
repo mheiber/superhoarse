@@ -23,6 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private var listeningIndicatorWindow: NSWindow?
     private var pasteNotificationWindow: NSWindow?
+    private var accessibilityNotificationWindow: NSWindow?
     private var appState: AppState?
     private var cancellables = Set<AnyCancellable>()
     private let logger = Logger(subsystem: "com.superhoarse.lite", category: "AppDelegate")
@@ -170,6 +171,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.togglePasteNotification(show)
             }
             .store(in: &cancellables)
+
+        appState.$showAccessibilityNotification
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] show in
+                self?.toggleAccessibilityNotification(show)
+            }
+            .store(in: &cancellables)
         
         appState.$hasAccessibilityPermission
             .receive(on: DispatchQueue.main)
@@ -308,6 +316,60 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func hidePasteNotification() {
         pasteNotificationWindow?.orderOut(nil)
         logger.info("Paste notification hidden.")
+    }
+
+    @MainActor
+    private func toggleAccessibilityNotification(_ show: Bool) {
+        if show {
+            showAccessibilityNotification()
+        } else {
+            hideAccessibilityNotification()
+        }
+    }
+
+    @MainActor
+    private func showAccessibilityNotification() {
+        guard let appState = appState else { return }
+
+        // Don't show popup if settings window is focused
+        if let settingsWindow = settingsWindow, settingsWindow.isKeyWindow {
+            logger.info("Settings window is focused, not showing accessibility notification")
+            return
+        }
+
+        let notificationView = AccessibilityNotificationView()
+            .environmentObject(appState)
+        let hostingController = NSHostingController(rootView: notificationView)
+
+        accessibilityNotificationWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 320),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        accessibilityNotificationWindow?.contentViewController = hostingController
+        accessibilityNotificationWindow?.isOpaque = false
+        accessibilityNotificationWindow?.backgroundColor = .clear
+        accessibilityNotificationWindow?.level = .floating
+        accessibilityNotificationWindow?.isMovableByWindowBackground = true
+        accessibilityNotificationWindow?.isReleasedWhenClosed = false
+
+        if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let windowSize = accessibilityNotificationWindow?.frame.size ?? .zero
+            let x = screenFrame.midX - windowSize.width / 2
+            let y = screenFrame.midY + 50
+            accessibilityNotificationWindow?.setFrameOrigin(CGPoint(x: x, y: y))
+        }
+
+        accessibilityNotificationWindow?.makeKeyAndOrderFront(nil)
+        logger.info("Accessibility notification shown")
+    }
+
+    private func hideAccessibilityNotification() {
+        accessibilityNotificationWindow?.orderOut(nil)
+        logger.info("Accessibility notification hidden.")
     }
     // COVERAGE_EXCLUDE_END
 }

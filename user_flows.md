@@ -49,7 +49,7 @@
 4. Release hotkey OR press again to stop
 5. Listening indicator disappears
 6. Text appears in focused application
-7. Text copied to clipboard automatically
+7. If "Copy to Clipboard" is enabled in settings, text is also copied to clipboard
 
 ### Audio Level Feedback
 1. During recording, listening indicator shows real-time audio levels
@@ -83,11 +83,17 @@
 4. Menu bar icon reflects current permission state in real-time
 5. No user action required to detect permission changes
 
-### No Accessibility Permission
+### No Accessibility Permission (Clipboard Enabled)
 1. Record audio successfully
-2. Text transcribed but NOT inserted into app
-3. Paste notification window appears (center screen)
-4. Text available in clipboard for manual paste (⌘V)
+2. Text transcribed and copied to clipboard
+3. Paste notification window appears (center screen) showing "⌘V"
+4. Notification dismisses after timeout or click
+
+### No Accessibility Permission (Clipboard Disabled - Default)
+1. Record audio successfully
+2. Text transcribed but NOT copied to clipboard
+3. Accessibility notification window appears (center screen)
+4. Shows "ACCESSIBILITY REQUIRED" with "Open Settings to grant permission"
 5. Notification dismisses after timeout or click
 
 ### No Microphone Permission
@@ -214,6 +220,21 @@
 2. Closing settings window keeps app running in background
 3. Settings accessed via menu bar item or dock icon (if visible)
 4. All preference changes take effect immediately
+
+### Copy to Clipboard Setting
+1. Open settings window
+2. Navigate to "APP PREFERENCES" section
+3. Toggle "COPY TO CLIPBOARD" (default: OFF)
+4. When enabled:
+   - Transcribed text is copied to system clipboard after each transcription
+   - "COPIED TO CLIPBOARD" label appears in recording status section
+   - If accessibility permission denied, paste notification (⌘V) appears
+5. When disabled (default):
+   - Text is NOT copied to clipboard
+   - No "COPIED TO CLIPBOARD" label shown
+   - If accessibility permission denied, accessibility notification appears instead
+   - Notification shows "ACCESSIBILITY REQUIRED" and "Open Settings to grant permission"
+6. Setting persists across app restarts
 
 ## Test Data Scenarios
 

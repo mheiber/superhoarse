@@ -124,8 +124,14 @@ class AppState: ObservableObject {
     @Published var hasAccessibilityPermission = false
     @Published var showListeningIndicator = false
     @Published var showPasteNotification = false
+    @Published var showAccessibilityNotification = false
     @Published var currentAudioLevel: Float = 0.0
     @Published var currentSpeechEngine: SpeechEngineType = .parakeet
+    @Published var copyToClipboard: Bool = UserDefaults.standard.object(forKey: "copyToClipboard") as? Bool ?? false {
+        didSet {
+            UserDefaults.standard.set(copyToClipboard, forKey: "copyToClipboard")
+        }
+    }
     
     private var hotKeyManager: HotKeyManager?
     private var permissionCheckTimer: Timer?
@@ -317,24 +323,29 @@ class AppState: ObservableObject {
         
         logger.info("Transcription received: '\(text)'")
         transcriptionText = text
-        
-        // Copy to clipboard
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(text, forType: NSPasteboard.PasteboardType.string)
-        logger.info("Text copied to clipboard")
-        
+
+        // Copy to clipboard only if enabled
+        if copyToClipboard {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: NSPasteboard.PasteboardType.string)
+            logger.info("Text copied to clipboard")
+        }
+
         // Fix: Re-check permission just-in-time before attempting to insert text.
         updateAccessibilityPermission()
-        
+
         // Insert text at cursor position only if we have permission
         if hasAccessibilityPermission {
             logger.info("Inserting text at cursor...")
             let sanitizedText = sanitizeTextForInsertion(text)
             insertTextAtCursor(sanitizedText)
-        } else {
+        } else if copyToClipboard {
             logger.info("Accessibility permission denied. Showing paste notification instead.")
             showPasteNotification = true
+        } else {
+            logger.info("Accessibility permission denied and clipboard disabled. Showing accessibility notification.")
+            showAccessibilityNotification = true
         }
     }
     
@@ -468,6 +479,10 @@ class AppState: ObservableObject {
     
     func hidePasteNotification() {
         showPasteNotification = false
+    }
+
+    func hideAccessibilityNotification() {
+        showAccessibilityNotification = false
     }
     
     func cancelRecording() {

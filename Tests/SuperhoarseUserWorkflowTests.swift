@@ -113,6 +113,44 @@ final class SuperhoarseUserWorkflowTests: XCTestCase {
         }
     }
     
+    // Test user workflow: User configures clipboard setting
+    func testUserConfiguresClipboardSetting() {
+        // Default should be OFF
+        XCTAssertFalse(appState.copyToClipboard, "Clipboard copy should default to OFF")
+
+        // User enables clipboard in settings
+        appState.copyToClipboard = true
+        XCTAssertTrue(appState.copyToClipboard, "User should be able to enable clipboard copy")
+
+        // Setting should persist
+        let persisted = UserDefaults.standard.bool(forKey: "copyToClipboard")
+        XCTAssertTrue(persisted, "Clipboard setting should persist for next launch")
+
+        // User disables clipboard in settings
+        appState.copyToClipboard = false
+        XCTAssertFalse(appState.copyToClipboard, "User should be able to disable clipboard copy")
+
+        let persistedOff = UserDefaults.standard.bool(forKey: "copyToClipboard")
+        XCTAssertFalse(persistedOff, "Clipboard OFF setting should persist")
+    }
+
+    // Test user workflow: Accessibility notification when clipboard is disabled
+    func testAccessibilityNotificationWithClipboardDisabled() {
+        // Ensure clipboard is disabled (default)
+        appState.copyToClipboard = false
+
+        // Accessibility notification should be observable
+        XCTAssertFalse(appState.showAccessibilityNotification, "Should not show initially")
+
+        // When clipboard is disabled and no accessibility, app should show accessibility notification
+        appState.showAccessibilityNotification = true
+        XCTAssertTrue(appState.showAccessibilityNotification, "Should show accessibility notification")
+
+        // User taps to dismiss
+        appState.hideAccessibilityNotification()
+        XCTAssertFalse(appState.showAccessibilityNotification, "Should dismiss accessibility notification")
+    }
+
     // Test user workflow: User sees accessibility permission status
     func testUserSeesAccessibilityPermissionStatus() {
         // User should be able to see their permission status

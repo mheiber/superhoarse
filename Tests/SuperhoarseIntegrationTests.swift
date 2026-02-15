@@ -275,6 +275,39 @@ final class SuperhoarseIntegrationTests: XCTestCase {
         XCTAssertNotNil(parakeetAvailable, "Parakeet engine should be available")
     }
     
+    // Test clipboard setting default and persistence
+    func testClipboardSettingDefaultAndPersistence() {
+        // Default should be OFF
+        XCTAssertFalse(appState.copyToClipboard, "Clipboard copy should default to OFF")
+
+        // User enables clipboard
+        appState.copyToClipboard = true
+        XCTAssertTrue(appState.copyToClipboard, "Clipboard setting should be togglable")
+
+        // Preference should be persisted
+        let savedValue = UserDefaults.standard.bool(forKey: "copyToClipboard")
+        XCTAssertTrue(savedValue, "Clipboard preference should be persisted to UserDefaults")
+
+        // User disables clipboard
+        appState.copyToClipboard = false
+        let savedValueOff = UserDefaults.standard.bool(forKey: "copyToClipboard")
+        XCTAssertFalse(savedValueOff, "Clipboard OFF preference should be persisted")
+    }
+
+    // Test accessibility notification state
+    func testAccessibilityNotificationState() {
+        // Initially no accessibility notification
+        XCTAssertFalse(appState.showAccessibilityNotification, "Should not show accessibility notification initially")
+
+        // Setting it should work
+        appState.showAccessibilityNotification = true
+        XCTAssertTrue(appState.showAccessibilityNotification, "Should be able to show accessibility notification")
+
+        // Hiding it should work
+        appState.hideAccessibilityNotification()
+        XCTAssertFalse(appState.showAccessibilityNotification, "Should be able to hide accessibility notification")
+    }
+
     // Test user preferences persistence
     func testUserPreferencesPersistence() {
         let initialEngine = appState.currentSpeechEngine
